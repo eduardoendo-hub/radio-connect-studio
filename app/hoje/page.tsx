@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { ChevronRight, LogOut, Mic2, Gift, Zap, CalendarDays } from 'lucide-react'
 import { chamar, hora, lerOperador, lerToken, sair, type Operador } from '../../lib/api'
 import { LogoStudio, LogoRadio, Rodape } from '../marca'
 
@@ -27,6 +28,18 @@ function saudacao(): string {
   return 'Boa noite'
 }
 
+function Indicador({ icone, valor, rotulo }: { icone: React.ReactNode; valor: number; rotulo: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <span style={{ color: 'var(--accent)', display: 'flex' }}>{icone}</span>
+      <span>
+        <strong className="numerico" style={{ fontWeight: 600 }}>{valor}</strong>{' '}
+        <span style={{ color: 'var(--texto-2)' }}>{rotulo}</span>
+      </span>
+    </div>
+  )
+}
+
 export default function Pagina() {
   const [dados, setDados] = useState<Hoje | null>(null)
   const [operador, setOperador] = useState<Operador | null>(null)
@@ -45,54 +58,59 @@ export default function Pagina() {
 
   return (
     <main className="container" style={{ paddingTop: 22, paddingBottom: 40 }}>
-      <header style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 34 }}>
+      <header style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 38 }}>
         <LogoStudio tamanho={26} />
-        <span style={{ fontWeight: 500 }}>
-          Radio Connect <span style={{ color: 'var(--texto-3)', fontWeight: 400 }}>Studio</span>
+        <span className="display" style={{ fontWeight: 600 }}>
+          Radio Connect <span style={{ color: 'var(--texto-3)', fontWeight: 500 }}>Studio</span>
         </span>
         <LogoRadio nome="Band FM" />
         <div style={{ flex: 1 }} />
         <span style={{ color: 'var(--texto-2)', fontSize: 13.5 }}>{operador?.nome}</span>
-        <button className="btn-vazio" style={{ padding: '7px 13px', fontSize: 13 }} onClick={sair}>Sair</button>
+        <button className="btn-vazio" style={{ padding: '7px 12px', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }} onClick={sair}>
+          <LogOut size={15} /> Sair
+        </button>
       </header>
 
-      {/*
-        O dashboard abre com o TRABALHO do dia, não com gráficos.
-        Primeiro o produtor precisa operar; analisar vem depois.
-      */}
-      <h1 style={{ fontSize: 27, fontWeight: 500, letterSpacing: '-.02em' }}>
+      {/* O dia abre com o TRABALHO, não com gráficos. Analisar vem depois de operar. */}
+      <h1 style={{ fontSize: 34, fontWeight: 600 }}>
         {saudacao()}, {operador?.nome?.split(' ')[0]}.
       </h1>
-      <p style={{ color: 'var(--texto-2)', marginTop: 7, fontSize: 15 }}>
-        Hoje você tem <strong style={{ color: 'var(--texto)' }}>{dados.resumo.programas} programas</strong>
-        {dados.resumo.momentosAgendados > 0 && <>, {dados.resumo.momentosAgendados} Momentos agendados</>}
-        {dados.resumo.promocoesAtivas > 0 && <> e {dados.resumo.promocoesAtivas} promoção ativa</>}.
-      </p>
+
+      <div style={{ display: 'flex', gap: 26, flexWrap: 'wrap', marginTop: 14, fontSize: 14.5 }}>
+        <Indicador icone={<CalendarDays size={17} />} valor={dados.resumo.programas} rotulo="programas hoje" />
+        {dados.resumo.momentosAgendados > 0 && (
+          <Indicador icone={<Zap size={17} />} valor={dados.resumo.momentosAgendados} rotulo="Momentos agendados" />
+        )}
+        {dados.resumo.promocoesAtivas > 0 && (
+          <Indicador icone={<Gift size={17} />} valor={dados.resumo.promocoesAtivas} rotulo="promoção ativa" />
+        )}
+      </div>
 
       {aoVivo && (
         <a href={`/ao-vivo/${aoVivo.id}`} className="cartao" style={{
-          display: 'block', marginTop: 26,
-          borderColor: 'rgba(227,39,30,.35)',
-          background: 'linear-gradient(180deg, rgba(227,39,30,.06), var(--superficie))',
+          display: 'block', marginTop: 28,
+          borderColor: 'rgba(227,39,30,.4)',
+          background: 'linear-gradient(135deg, rgba(227,39,30,.09), rgba(15,32,32,.75) 55%)',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 240 }}>
               <span className="etiqueta-ao-vivo"><span className="pulso" />NO AR</span>
-              <div style={{ fontSize: 22, fontWeight: 500, marginTop: 13, letterSpacing: '-.01em' }}>
+              <div className="display" style={{ fontSize: 25, fontWeight: 600, marginTop: 13 }}>
                 {aoVivo.titulo ?? aoVivo.programa.nome}
               </div>
-              <div style={{ color: 'var(--texto-2)', marginTop: 5, fontSize: 14 }}>
-                {aoVivo.locutor ? `com ${aoVivo.locutor.nome} · ` : ''}
-                {hora(aoVivo.inicioEm)} às {hora(aoVivo.fimEm)}
+              <div style={{ color: 'var(--texto-2)', marginTop: 6, fontSize: 14, display: 'flex', alignItems: 'center', gap: 7 }}>
+                {aoVivo.locutor && <><Mic2 size={14} /> {aoVivo.locutor.nome} ·</>}
+                <span className="numerico">{hora(aoVivo.inicioEm)} às {hora(aoVivo.fimEm)}</span>
               </div>
             </div>
-            <span className="btn">Entrar na operação</span>
+            <span className="btn" style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+              Entrar na operação <ChevronRight size={17} />
+            </span>
           </div>
         </a>
       )}
 
-      {/* A grade do dia como linha do tempo — é assim que a produção pensa. */}
-      <h2 style={{ fontSize: 12, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--texto-2)', margin: '34px 0 14px' }}>
+      <h2 style={{ fontSize: 11.5, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--texto-2)', margin: '36px 0 14px', fontWeight: 500 }}>
         Programação de hoje
       </h2>
 
@@ -100,24 +118,29 @@ export default function Pagina() {
         {dados.edicoes.map((e) => {
           const noAr = e.id === dados.aoVivoId
           return (
-            <a key={e.id} href={`/ao-vivo/${e.id}`} className="cartao" style={{
+            <a key={e.id} href={`/ao-vivo/${e.id}`} className="linha" style={{
               display: 'flex', alignItems: 'center', gap: 16, padding: '14px 18px',
-              borderColor: noAr ? 'rgba(227,39,30,.3)' : 'var(--borda)',
+              borderColor: noAr ? 'rgba(227,39,30,.32)' : undefined,
             }}>
-              <div style={{ width: 3, height: 34, borderRadius: 2, background: e.programa.corDestaque ?? 'var(--borda-forte)' }} />
-              <div style={{ width: 52, color: 'var(--texto-2)', fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>
+              <div style={{ width: 3, height: 36, borderRadius: 2, background: e.programa.corDestaque ?? 'var(--borda-forte)' }} />
+              <div className="numerico" style={{ width: 52, color: 'var(--texto-2)', fontSize: 14 }}>
                 {hora(e.inicioEm)}
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 500, fontSize: 15 }}>{e.titulo ?? e.programa.nome}</div>
-                {e.locutor && <div style={{ color: 'var(--texto-3)', fontSize: 13, marginTop: 2 }}>{e.locutor.nome}</div>}
+                <div style={{ fontWeight: 500, fontSize: 15.5 }}>{e.titulo ?? e.programa.nome}</div>
+                {e.locutor && (
+                  <div style={{ color: 'var(--texto-3)', fontSize: 13, marginTop: 3, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <Mic2 size={12} /> {e.locutor.nome}
+                  </div>
+                )}
               </div>
               {e._count.momentos > 0 && (
-                <span style={{ color: 'var(--texto-2)', fontSize: 13 }}>
-                  {e._count.momentos} {e._count.momentos === 1 ? 'Momento' : 'Momentos'}
+                <span style={{ color: 'var(--texto-2)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Zap size={13} /> <span className="numerico">{e._count.momentos}</span>
                 </span>
               )}
               {noAr && <span className="pulso" />}
+              <ChevronRight size={16} style={{ color: 'var(--texto-3)' }} />
             </a>
           )
         })}

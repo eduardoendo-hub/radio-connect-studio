@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { ArrowLeft, LogOut, Mic2, Timer, Zap, CheckCircle2, Radio, Megaphone } from 'lucide-react'
 import { chamar, contagem, hora, lerToken, sair } from '../../../lib/api'
 import { LogoStudio, LogoRadio, Rodape } from '../../marca'
 
@@ -116,14 +117,18 @@ export default function Pagina({ params }: { params: { id: string } }) {
       <header style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 30 }}>
         <a href="/hoje" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <LogoStudio tamanho={26} />
-          <span style={{ fontWeight: 500 }}>
-            Radio Connect <span style={{ color: 'var(--texto-3)', fontWeight: 400 }}>Studio</span>
+          <span className="display" style={{ fontWeight: 600 }}>
+            Radio Connect <span style={{ color: 'var(--texto-3)', fontWeight: 500 }}>Studio</span>
           </span>
         </a>
         <LogoRadio nome="Band FM" />
         <div style={{ flex: 1 }} />
-        <a href="/hoje" className="btn-vazio" style={{ padding: '7px 13px', fontSize: 13 }}>Voltar ao dia</a>
-        <button className="btn-vazio" style={{ padding: '7px 13px', fontSize: 13 }} onClick={sair}>Sair</button>
+        <a href="/hoje" className="btn-vazio" style={{ padding: '7px 12px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <ArrowLeft size={15} /> Voltar ao dia
+        </a>
+        <button className="btn-vazio" style={{ padding: '7px 12px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }} onClick={sair}>
+          <LogOut size={15} /> Sair
+        </button>
       </header>
 
       {/*
@@ -132,12 +137,12 @@ export default function Pagina({ params }: { params: { id: string } }) {
       */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, flexWrap: 'wrap' }}>
         {noAr && <span className="etiqueta-ao-vivo"><span className="pulso" />AO VIVO</span>}
-        <h1 style={{ fontSize: 28, fontWeight: 500, letterSpacing: '-.02em' }}>
+        <h1 style={{ fontSize: 32, fontWeight: 600 }}>
           {edicao.titulo ?? edicao.programa.nome}
         </h1>
-        <span style={{ color: 'var(--texto-2)', fontSize: 14.5 }}>
-          {edicao.locutor ? `com ${edicao.locutor.nome} · ` : ''}
-          {hora(edicao.inicioEm)} às {hora(edicao.fimEm)}
+        <span style={{ color: 'var(--texto-2)', fontSize: 14.5, display: 'flex', alignItems: 'center', gap: 7 }}>
+          {edicao.locutor && <><Mic2 size={14} /> {edicao.locutor.nome} ·</>}
+          <span className="numerico">{hora(edicao.inicioEm)} às {hora(edicao.fimEm)}</span>
         </span>
       </div>
 
@@ -148,16 +153,18 @@ export default function Pagina({ params }: { params: { id: string } }) {
         <section className="cartao" style={{ marginTop: 24, borderColor: 'var(--accent)' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 11, letterSpacing: '.1em', color: 'var(--accent)', textTransform: 'uppercase' }}>
-                Momento no ar
+              <div style={{ fontSize: 11, letterSpacing: '.12em', color: 'var(--accent)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 7, fontWeight: 500 }}>
+                <Radio size={13} /> Momento no ar
               </div>
-              <div style={{ fontSize: 21, fontWeight: 500, marginTop: 9 }}>{ativo.titulo}</div>
+              <div className="display" style={{ fontSize: 23, fontWeight: 600, marginTop: 10 }}>{ativo.titulo}</div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 27, fontVariantNumeric: 'tabular-nums', fontWeight: 500 }}>
+              <div className="numerico display" style={{ fontSize: 30, fontWeight: 600 }}>
                 {contagem(ativo.fimEm)}
               </div>
-              <div style={{ fontSize: 11.5, color: 'var(--texto-3)' }}>restam</div>
+              <div style={{ fontSize: 11.5, color: 'var(--texto-3)', display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'flex-end' }}>
+                <Timer size={12} /> restam
+              </div>
             </div>
           </div>
 
@@ -176,7 +183,7 @@ export default function Pagina({ params }: { params: { id: string } }) {
                       <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px' }}>
                         <span>{o.emoji}</span>
                         <span style={{ flex: 1, fontSize: 14.5 }}>{o.rotulo}</span>
-                        <span style={{ color: 'var(--texto-2)', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>
+                        <span className="numerico" style={{ color: 'var(--texto-2)', fontSize: 13 }}>
                           {o.votos} · {pct}%
                         </span>
                       </div>
@@ -190,12 +197,13 @@ export default function Pagina({ params }: { params: { id: string } }) {
             </div>
           )}
 
-          <button className="btn-vazio" style={{ marginTop: 18 }} disabled={ocupado} onClick={() => encerrar(ativo.id)}>
-            Encerrar e publicar resultado
+          <button className="btn-vazio" style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 8 }} disabled={ocupado} onClick={() => encerrar(ativo.id)}>
+            <CheckCircle2 size={16} /> Encerrar e publicar resultado
           </button>
         </section>
       ) : (
-        <div className="cartao" style={{ marginTop: 24, color: 'var(--texto-2)', fontSize: 14.5 }}>
+        <div className="cartao" style={{ marginTop: 24, color: 'var(--texto-2)', fontSize: 14.5, display: 'flex', alignItems: 'center', gap: 11 }}>
+          <Radio size={17} style={{ color: 'var(--texto-3)', flex: 'none' }} />
           Nenhum Momento no ar. O aplicativo segue vivo com o programa, o locutor e a promoção.
         </div>
       )}
@@ -204,12 +212,15 @@ export default function Pagina({ params }: { params: { id: string } }) {
         Templates: a meta é criar um Momento em menos de 20 segundos.
         O produtor escolhe um acontecimento, não preenche um formulário.
       */}
-      <h2 style={{ fontSize: 12, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--texto-2)', margin: '34px 0 14px' }}>
-        Publicar agora
+      <h2 style={{ fontSize: 11.5, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--texto-2)', margin: '36px 0 6px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Zap size={14} /> Publicar agora
       </h2>
+      <p style={{ color: 'var(--texto-3)', fontSize: 13, marginBottom: 14 }}>
+        Um clique e o Momento chega no celular de quem está ouvindo.
+      </p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(215px, 1fr))', gap: 10 }}>
         {templates.map((t) => (
-          <button key={t.id} className="cartao" disabled={ocupado} onClick={() => publicar(t)}
+          <button key={t.id} className="linha" disabled={ocupado} onClick={() => publicar(t)}
             style={{ textAlign: 'left', padding: 16, opacity: ocupado ? .5 : 1 }}>
             <div style={{ fontWeight: 500, fontSize: 15 }}>{t.nome}</div>
             <div style={{ color: 'var(--texto-3)', fontSize: 12.5, marginTop: 6 }}>
@@ -222,16 +233,16 @@ export default function Pagina({ params }: { params: { id: string } }) {
 
       {passados.length > 0 && (
         <>
-          <h2 style={{ fontSize: 12, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--texto-2)', margin: '34px 0 14px' }}>
-            Linha do tempo
+          <h2 style={{ fontSize: 11.5, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--texto-2)', margin: '36px 0 14px', fontWeight: 500 }}>
+            Já aconteceu nesta edição
           </h2>
           <div style={{ display: 'grid', gap: 8 }}>
             {passados.map((m) => {
               const total = m.opcoes.reduce((s, o) => s + o.votos, 0)
               const vencedora = [...m.opcoes].sort((a, b) => b.votos - a.votos)[0]
               return (
-                <div key={m.id} className="cartao" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '13px 18px' }}>
-                  <div style={{ width: 52, color: 'var(--texto-3)', fontSize: 13.5, fontVariantNumeric: 'tabular-nums' }}>
+                <div key={m.id} className="linha" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '13px 18px' }}>
+                  <div className="numerico" style={{ width: 52, color: 'var(--texto-3)', fontSize: 13.5 }}>
                     {hora(m.inicioEm)}
                   </div>
                   <div style={{ flex: 1 }}>
@@ -245,8 +256,8 @@ export default function Pagina({ params }: { params: { id: string } }) {
                   {m.campanhaPatrocinadoraId && (
                     <span style={{
                       fontSize: 11, color: 'var(--rosa)', border: '1px solid rgba(232,67,123,.3)',
-                      borderRadius: 999, padding: '3px 9px',
-                    }}>patrocinado</span>
+                      borderRadius: 999, padding: '3px 9px', display: 'flex', alignItems: 'center', gap: 5,
+                    }}><Megaphone size={11} /> patrocinado</span>
                   )}
                   <span style={{ color: 'var(--texto-3)', fontSize: 12 }}>{m.estado.toLowerCase().replace(/_/g, ' ')}</span>
                 </div>

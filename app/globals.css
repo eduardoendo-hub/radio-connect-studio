@@ -27,6 +27,7 @@
 
   --raio: 10px;
   --sombra: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --vidro: rgba(15, 32, 32, .72);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -34,10 +35,20 @@
 html, body {
   background: var(--fundo);
   color: var(--texto);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif;
+  font-family: var(--fonte-corpo), -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   min-height: 100%;
 }
+
+/* Títulos com a grotesca. O corpo fica na Inter, que some do caminho. */
+h1, h2, h3, .display {
+  font-family: var(--fonte-display), var(--fonte-corpo), sans-serif;
+  letter-spacing: -.02em;
+}
+
+/* Números que não dançam: contagem regressiva, votos, horários. */
+.numerico { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum'; }
 
 /* O filete de assinatura: teal → rosa. Sempre fino, nunca como fundo. */
 .assinatura {
@@ -52,13 +63,27 @@ a { color: inherit; text-decoration: none; }
 .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
 
 .cartao {
-  background: var(--superficie);
+  background: var(--vidro);
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
   border: 1px solid var(--borda);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 20px;
 }
 
+/* Linha de programação: mais compacta que um cartão, mesma linguagem. */
+.linha {
+  background: rgba(15, 32, 32, .55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  transition: border-color .15s ease, background .15s ease;
+}
+.linha:hover { border-color: var(--borda-forte); background: rgba(22, 48, 46, .6); }
+
 .btn {
+  font-family: var(--fonte-corpo), sans-serif;
   background: var(--accent);
   color: #06201d;
   border-radius: var(--raio);
