@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { ChevronRight, LogOut, Mic2, Gift, Zap, CalendarDays } from 'lucide-react'
 import { chamar, hora, lerOperador, lerToken, sair, type Operador } from '../../lib/api'
-import { LogoStudio, LogoRadio, Rodape } from '../marca'
+import { CabecalhoMarca, Rodape } from '../marca'
 
 type Edicao = {
   id: string
@@ -58,12 +58,9 @@ export default function Pagina() {
 
   return (
     <main className="container" style={{ paddingTop: 22, paddingBottom: 40 }}>
-      <header style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 38 }}>
-        <LogoStudio tamanho={26} />
-        <span className="display" style={{ fontWeight: 600 }}>
-          Radio Connect <span style={{ color: 'var(--texto-3)', fontWeight: 500 }}>Studio</span>
-        </span>
-        <LogoRadio nome="Band FM" />
+      <header style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 38, flexWrap: 'wrap' }}>
+        {/* O batimento acompanha o estado: mais lento fora do ar, mais rápido no ar. */}
+        <CabecalhoMarca ritmo={dados.aoVivoId ? 'no-ar' : 'fora-do-ar'} />
         <div style={{ flex: 1 }} />
         <span style={{ color: 'var(--texto-2)', fontSize: 13.5 }}>{operador?.nome}</span>
         <button className="btn-vazio" style={{ padding: '7px 12px', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }} onClick={sair}>

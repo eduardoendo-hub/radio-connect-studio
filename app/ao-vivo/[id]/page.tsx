@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ArrowLeft, LogOut, Mic2, Timer, Zap, CheckCircle2, Radio, Megaphone } from 'lucide-react'
 import { chamar, contagem, hora, lerToken, sair } from '../../../lib/api'
-import { LogoStudio, LogoRadio, Rodape } from '../../marca'
+import { CabecalhoMarca, Rodape } from '../../marca'
 
 type Opcao = { id: string; ordem: number; rotulo: string; emoji: string | null; votos: number }
 type Momento = {
@@ -115,13 +115,9 @@ export default function Pagina({ params }: { params: { id: string } }) {
   return (
     <main className="container" style={{ paddingTop: 22, paddingBottom: 40 }}>
       <header style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 30 }}>
-        <a href="/hoje" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <LogoStudio tamanho={26} />
-          <span className="display" style={{ fontWeight: 600 }}>
-            Radio Connect <span style={{ color: 'var(--texto-3)', fontWeight: 500 }}>Studio</span>
-          </span>
-        </a>
-        <LogoRadio nome="Band FM" />
+        {/* Com Momento no ar o pulso acelera para 1,1s — dá para ler o estado da
+            operação pelo batimento da marca, sem olhar o texto. */}
+        <CabecalhoMarca compacto ritmo={ativo ? 'momento-ativo' : noAr ? 'no-ar' : 'fora-do-ar'} />
         <div style={{ flex: 1 }} />
         <a href="/hoje" className="btn-vazio" style={{ padding: '7px 12px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
           <ArrowLeft size={15} /> Voltar ao dia

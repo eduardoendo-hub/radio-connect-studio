@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { chamar, guardarSessao, type Operador } from '../lib/api'
-import { LogoStudio, LogoTechNow } from './marca'
+import { MarcaPulso, AssinaturaStudio, PoweredByTechNow } from './marca'
 
 export default function Entrar() {
   const [email, setEmail] = useState('')
@@ -30,15 +30,13 @@ export default function Entrar() {
   return (
     <main style={{ minHeight: 'calc(100vh - 2px)', display: 'grid', placeItems: 'center', padding: 24 }}>
       <div style={{ width: '100%', maxWidth: 380 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 30 }}>
-          <LogoStudio tamanho={34} />
-          <div>
-            <div style={{ fontSize: 19, fontWeight: 500, letterSpacing: '-.01em' }}>
-              Radio Connect <span style={{ color: 'var(--texto-2)', fontWeight: 400 }}>Studio</span>
-            </div>
-            <div style={{ fontSize: 12.5, color: 'var(--texto-3)', marginTop: 3 }}>
-              O sistema operacional da sua rádio digital
-            </div>
+        {/* Lockup empilhado, como manda o design system para login e splash.
+            Fora do ar: o pulso bate devagar, em 4 segundos. */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, marginBottom: 34 }}>
+          <MarcaPulso tamanho={52} ritmo="fora-do-ar" />
+          <AssinaturaStudio tamanho={23} />
+          <div style={{ fontSize: 13, color: 'var(--texto-3)', textAlign: 'center' }}>
+            O sistema operacional da sua rádio digital
           </div>
         </div>
 
@@ -76,19 +74,8 @@ export default function Entrar() {
           </button>
         </form>
 
-        <div
-          style={{
-            marginTop: 26,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            color: 'var(--texto-3)',
-            fontSize: 12,
-          }}
-        >
-          <span>powered by</span>
-          <LogoTechNow tamanho={13} />
+        <div style={{ marginTop: 28, display: 'flex', justifyContent: 'center' }}>
+          <PoweredByTechNow tamanho={19} />
         </div>
       </div>
     </main>
