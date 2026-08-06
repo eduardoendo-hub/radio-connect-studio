@@ -21,13 +21,6 @@ type Hoje = {
   resumo: { programas: number; momentosAgendados: number; promocoesAtivas: number }
 }
 
-function saudacao(): string {
-  const h = new Date().getHours()
-  if (h < 12) return 'Bom dia'
-  if (h < 18) return 'Boa tarde'
-  return 'Boa noite'
-}
-
 function Indicador({ icone, valor, rotulo }: { icone: React.ReactNode; valor: number; rotulo: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -68,10 +61,9 @@ export default function Pagina() {
         </button>
       </header>
 
-      {/* O dia abre com o TRABALHO, não com gráficos. Analisar vem depois de operar. */}
-      <h1 style={{ fontSize: 34, fontWeight: 600 }}>{saudacao()}.</h1>
-
-      <div style={{ display: 'flex', gap: 26, flexWrap: 'wrap', marginTop: 14, fontSize: 14.5 }}>
+      {/* O dia abre com o TRABALHO, não com saudação nem gráfico. O produtor chega
+          para operar — os números do dia são a primeira coisa que ele precisa ver. */}
+      <div style={{ display: 'flex', gap: 26, flexWrap: 'wrap', fontSize: 14.5 }}>
         <Indicador icone={<CalendarDays size={17} />} valor={dados.resumo.programas} rotulo="programas hoje" />
         {dados.resumo.momentosAgendados > 0 && (
           <Indicador icone={<Zap size={17} />} valor={dados.resumo.momentosAgendados} rotulo="Momentos agendados" />
