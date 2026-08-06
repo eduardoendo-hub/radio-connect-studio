@@ -31,13 +31,11 @@ export default function Entrar() {
     <main style={{ minHeight: 'calc(100vh - 2px)', display: 'grid', placeItems: 'center', padding: 24 }}>
       <div style={{ width: '100%', maxWidth: 380 }}>
         {/* Lockup empilhado, como manda o design system para login e splash.
-            Fora do ar: o pulso bate devagar, em 4 segundos. */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, marginBottom: 34 }}>
-          <MarcaPulso tamanho={52} ritmo="fora-do-ar" />
-          <AssinaturaStudio tamanho={23} />
-          <div style={{ fontSize: 13, color: 'var(--texto-3)', textAlign: 'center' }}>
-            O sistema operacional da sua rádio digital
-          </div>
+            Ritmo "no ar" aqui de propósito: a marca precisa estar viva antes mesmo de
+            alguém entrar — é a primeira coisa que o produtor vê todo dia. */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, marginBottom: 38 }}>
+          <MarcaPulso tamanho={68} ritmo="no-ar" />
+          <AssinaturaStudio tamanho={25} />
         </div>
 
         <form onSubmit={entrar} className="cartao" style={{ display: 'grid', gap: 16 }}>
