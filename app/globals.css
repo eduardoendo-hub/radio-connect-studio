@@ -1,0 +1,135 @@
+/*
+ * Design System TechNow.
+ *
+ * O Studio é co-branded: identidade da TechNow, com a marca da rádio ao lado. Cores
+ * amostradas dos pixels do deck da proposta, não estimadas de olho.
+ *
+ * O app do ouvinte usa outra paleta — a da emissora. São públicos opostos.
+ */
+
+:root {
+  --fundo: #080f0f;
+  --superficie: #0f2020;
+  --superficie-alta: #16302e;
+  --borda: #1e3634;
+  --borda-forte: #2a4a47;
+
+  --accent: #81d8d0;
+  --accent-forte: #5bc4ba;
+  --rosa: #e8437b;
+
+  /* Reservado: significa "acontecendo agora" e mais nada. Nunca para erro ou exclusão. */
+  --ao-vivo: #e3271e;
+
+  --texto: #f1f5f4;
+  --texto-2: #8fa3a1;
+  --texto-3: #5c6f6d;
+
+  --raio: 10px;
+  --sombra: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--fundo);
+  color: var(--texto);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100%;
+}
+
+/* O filete de assinatura: teal → rosa. Sempre fino, nunca como fundo. */
+.assinatura {
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--rosa) 100%);
+}
+
+button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, select, textarea { font: inherit; }
+a { color: inherit; text-decoration: none; }
+
+.container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+.cartao {
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.btn {
+  background: var(--accent);
+  color: #06201d;
+  border-radius: var(--raio);
+  padding: 11px 18px;
+  font-weight: 500;
+  transition: background .15s ease;
+}
+.btn:hover { background: var(--accent-forte); }
+.btn:disabled { opacity: .5; cursor: default; }
+
+.btn-vazio {
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--raio);
+  padding: 10px 16px;
+  color: var(--texto);
+}
+.btn-vazio:hover { border-color: var(--accent); color: var(--accent); }
+
+.campo {
+  width: 100%;
+  background: var(--fundo);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 12px 14px;
+  color: var(--texto);
+  outline: none;
+}
+.campo:focus { border-color: var(--accent); }
+.campo::placeholder { color: var(--texto-3); }
+
+.rotulo {
+  display: block;
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--texto-2);
+  margin-bottom: 8px;
+}
+
+/* O pulso: comunica vida sem pedir atenção. Discreto, contínuo, elegante. */
+.pulso {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--ao-vivo);
+  box-shadow: 0 0 0 0 rgba(227, 39, 30, .7);
+  animation: pulsar 2s infinite;
+  flex: none;
+}
+@keyframes pulsar {
+  0%   { box-shadow: 0 0 0 0 rgba(227, 39, 30, .6); }
+  70%  { box-shadow: 0 0 0 10px rgba(227, 39, 30, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(227, 39, 30, 0); }
+}
+
+.etiqueta-ao-vivo {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(227, 39, 30, .12);
+  border: 1px solid rgba(227, 39, 30, .35);
+  color: #ff8a84;
+  border-radius: 999px;
+  padding: 4px 11px 4px 9px;
+  font-size: 11px;
+  letter-spacing: .1em;
+  font-weight: 500;
+}
+
+.erro {
+  background: rgba(227, 39, 30, .1);
+  border: 1px solid rgba(227, 39, 30, .3);
+  color: #ff9a95;
+  border-radius: var(--raio);
+  padding: 11px 14px;
+  font-size: 14px;
+}
