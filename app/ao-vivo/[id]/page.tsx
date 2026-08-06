@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { ArrowLeft, LogOut, Mic2, Timer, Zap, CheckCircle2, Radio, Megaphone } from 'lucide-react'
+import { ArrowLeft, LogOut, Mic2, Timer, Zap, CheckCircle2, Radio, Megaphone, ChevronDown, Trophy, Users } from 'lucide-react'
 import { chamar, contagem, hora, lerToken, sair } from '../../../lib/api'
 import { EditorMomento, type MomentoParaPublicar } from './editor'
 import { CabecalhoMarca, Rodape } from '../../marca'
@@ -35,6 +35,7 @@ export default function Pagina({ params }: { params: { id: string } }) {
   const [erro, setErro] = useState('')
   const [ocupado, setOcupado] = useState(false)
   const [editando, setEditando] = useState<Template | null>(null)
+  const [aberto, setAberto] = useState<string | null>(null)
   const [agora, setAgora] = useState(() => Date.now())
 
   const carregar = useCallback(async () => {
@@ -222,27 +223,122 @@ export default function Pagina({ params }: { params: { id: string } }) {
           <div style={{ display: 'grid', gap: 8 }}>
             {passados.map((m) => {
               const total = m.opcoes.reduce((s, o) => s + o.votos, 0)
-              const vencedora = [...m.opcoes].sort((a, b) => b.votos - a.votos)[0]
+              const ordenadas = [...m.opcoes].sort((a, b) => b.votos - a.votos)
+              const vencedora = ordenadas[0]
+              const expandido = aberto === m.id
+              const temResultado = m.opcoes.length > 0
+
               return (
-                <div key={m.id} className="linha" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '13px 18px' }}>
-                  <div className="numerico" style={{ width: 52, color: 'var(--texto-3)', fontSize: 13.5 }}>
-                    {hora(m.inicioEm)}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14.5 }}>{m.titulo}</div>
-                    {vencedora && total > 0 && (
-                      <div style={{ color: 'var(--texto-3)', fontSize: 12.5, marginTop: 3 }}>
-                        {vencedora.emoji} {vencedora.rotulo} venceu · {total} participações
-                      </div>
+                <div key={m.id} className="linha" style={{ overflow: 'hidden' }}>
+                  {/*
+                    A linha resume; o clique abre o resultado. A lista existe para o
+                    produtor varrer o que aconteceu — e quando algo chama a atenção,
+                    ele abre ali mesmo, sem sair da operação ao vivo.
+                  */}
+                  <div
+                    onClick={() => temResultado && setAberto(expandido ? null : m.id)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 16, padding: '13px 18px',
+                      cursor: temResultado ? 'pointer' : 'default',
+                    }}
+                  >
+                    <div className="numerico" style={{ width: 52, color: 'var(--texto-3)', fontSize: 13.5 }}>
+                      {hora(m.inicioEm)}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14.5 }}>{m.titulo}</div>
+                      {vencedora && total > 0 && !expandido && (
+                        <div style={{ color: 'var(--texto-3)', fontSize: 12.5, marginTop: 3 }}>
+                          {vencedora.emoji} {vencedora.rotulo} venceu · {total} {total === 1 ? 'participação' : 'participações'}
+                        </div>
+                      )}
+                    </div>
+                    {m.campanhaPatrocinadoraId && (
+                      <span style={{
+                        fontSize: 11, color: 'var(--rosa)', border: '1px solid rgba(232,67,123,.3)',
+                        borderRadius: 999, padding: '3px 9px', display: 'flex', alignItems: 'center', gap: 5,
+                      }}><Megaphone size={11} /> patrocinado</span>
+                    )}
+                    <span style={{ color: 'var(--texto-3)', fontSize: 12, whiteSpace: 'nowrap' }}>
+                      {m.estado.toLowerCase().replace(/_/g, ' ')}
+                    </span>
+                    {temResultado && (
+                      <ChevronDown
+                        size={16}
+                        style={{
+                          color: 'var(--texto-3)', flex: 'none',
+                          transform: expandido ? 'rotate(180deg)' : 'none',
+                          transition: 'transform .18s ease',
+                        }}
+                      />
                     )}
                   </div>
-                  {m.campanhaPatrocinadoraId && (
-                    <span style={{
-                      fontSize: 11, color: 'var(--rosa)', border: '1px solid rgba(232,67,123,.3)',
-                      borderRadius: 999, padding: '3px 9px', display: 'flex', alignItems: 'center', gap: 5,
-                    }}><Megaphone size={11} /> patrocinado</span>
+
+                  {expandido && temResultado && (
+                    <div style={{ padding: '4px 18px 18px', borderTop: '1px solid var(--borda)' }}>
+                      {total === 0 ? (
+                        <div style={{ color: 'var(--texto-3)', fontSize: 13, paddingTop: 14 }}>
+                          Ninguém participou deste Momento.
+                        </div>
+                      ) : (
+                        <>
+                          <div style={{
+                            display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap',
+                            padding: '14px 0 12px', color: 'var(--texto-2)', fontSize: 13,
+                          }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                              <Trophy size={14} style={{ color: 'var(--accent)' }} />
+                              <strong style={{ color: 'var(--texto)', fontWeight: 500 }}>
+                                {vencedora!.emoji} {vencedora!.rotulo}
+                              </strong>
+                              venceu
+                            </span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                              <Users size={14} />
+                              <span className="numerico">{total}</span>
+                              {total === 1 ? 'participação' : 'participações'}
+                            </span>
+                          </div>
+
+                          <div style={{ display: 'grid', gap: 9 }}>
+                            {ordenadas.map((o, i) => {
+                              const pct = Math.round((o.votos / total) * 100)
+                              const campeao = i === 0
+                              return (
+                                <div key={o.id} style={{
+                                  position: 'relative', background: 'var(--fundo)',
+                                  borderRadius: 8, overflow: 'hidden',
+                                }}>
+                                  <div style={{
+                                    position: 'absolute', inset: 0, width: `${pct}%`,
+                                    background: campeao ? 'rgba(129,216,208,.2)' : 'rgba(255,255,255,.05)',
+                                  }} />
+                                  <div style={{
+                                    position: 'relative', display: 'flex', alignItems: 'center',
+                                    gap: 10, padding: '10px 14px',
+                                  }}>
+                                    <span>{o.emoji}</span>
+                                    <span style={{
+                                      flex: 1, fontSize: 14,
+                                      color: campeao ? 'var(--texto)' : 'var(--texto-2)',
+                                      fontWeight: campeao ? 500 : 400,
+                                    }}>{o.rotulo}</span>
+                                    <span className="numerico" style={{
+                                      fontSize: 13,
+                                      color: campeao ? 'var(--accent)' : 'var(--texto-2)',
+                                      fontWeight: campeao ? 500 : 400,
+                                    }}>
+                                      {o.votos} · {pct}%
+                                    </span>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </>
+                      )}
+                    </div>
                   )}
-                  <span style={{ color: 'var(--texto-3)', fontSize: 12 }}>{m.estado.toLowerCase().replace(/_/g, ' ')}</span>
                 </div>
               )
             })}
