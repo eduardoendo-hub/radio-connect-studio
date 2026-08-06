@@ -1,9 +1,11 @@
-node_modules/
-.next/
-out/
-.env
-.env.local
+
+# Cache de build — nunca versionar, e o iCloud não deve sincronizar
 *.log
 .DS_Store
-tsconfig.tsbuildinfo
+.env
+.env.local
+.next/
 next-env.d.ts
+node_modules/
+out/
+tsconfig.tsbuildinfo

@@ -89,12 +89,13 @@ function Divisor() {
 }
 
 /**
- * O lockup co-branded, na ordem do design system:
+ * O lockup co-branded do topo:
  *
- *   [ Band FM ] │ [ ◗)) RadioConnect Studio ] │ [ powered by TechNow ]
+ *   [ Band FM ] │ [ ◗)) RadioConnect Studio ]
  *
- * A rádio vem primeiro porque o Studio é a casa dela. A TechNow assina no fim, discreta
- * e permanente — o oposto do app do ouvinte, onde nada disso aparece.
+ * A rádio vem primeiro porque o Studio é a casa dela. A assinatura da TechNow vive só
+ * no rodapé — no topo ela competiria com a informação que o produtor precisa ler o dia
+ * inteiro, e assinatura de fornecedor não é conteúdo operacional.
  */
 export function CabecalhoMarca({
   ritmo = 'no-ar',
@@ -120,13 +121,6 @@ export function CabecalhoMarca({
         <MarcaPulso tamanho={compacto ? 24 : 28} ritmo={ritmo} />
         <AssinaturaStudio tamanho={compacto ? 15 : 17} />
       </a>
-
-      {!compacto && (
-        <>
-          <Divisor />
-          <PoweredByTechNow />
-        </>
-      )}
     </div>
   )
 }
