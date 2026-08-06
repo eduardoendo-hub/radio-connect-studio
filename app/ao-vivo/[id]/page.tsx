@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ArrowLeft, LogOut, Mic2, Timer, Zap, CheckCircle2, Radio, Megaphone } from 'lucide-react'
 import { chamar, contagem, hora, lerToken, sair } from '../../../lib/api'
+import { EditorMomento, type MomentoParaPublicar } from './editor'
 import { CabecalhoMarca, Rodape } from '../../marca'
 
 type Opcao = { id: string; ordem: number; rotulo: string; emoji: string | null; votos: number }
@@ -26,21 +27,14 @@ type Edicao = {
   locutor: { nome: string } | null
   momentos: Momento[]
 }
-type Template = {
-  id: string
-  nome: string
-  tipo: string
-  titulo: string
-  opcoesPadrao: { rotulo: string; emoji?: string }[]
-  duracaoSegundos: number
-  favorito: boolean
-}
+import type { Template } from './editor'
 
 export default function Pagina({ params }: { params: { id: string } }) {
   const [edicao, setEdicao] = useState<Edicao | null>(null)
   const [templates, setTemplates] = useState<Template[]>([])
   const [erro, setErro] = useState('')
   const [ocupado, setOcupado] = useState(false)
+  const [editando, setEditando] = useState<Template | null>(null)
   const [agora, setAgora] = useState(() => Date.now())
 
   const carregar = useCallback(async () => {
@@ -66,23 +60,16 @@ export default function Pagina({ params }: { params: { id: string } }) {
     return () => clearInterval(t)
   }, [carregar])
 
-  async function publicar(t: Template) {
+  async function publicar(m: MomentoParaPublicar) {
     if (ocupado) return
     setOcupado(true)
     setErro('')
     try {
       await chamar('/studio/momentos', {
         method: 'POST',
-        body: JSON.stringify({
-          edicaoId: params.id,
-          tipo: t.tipo,
-          titulo: t.titulo,
-          duracaoSegundos: t.duracaoSegundos,
-          opcoes: t.opcoesPadrao,
-          templateId: t.id,
-          publicarAgora: true,
-        }),
+        body: JSON.stringify({ edicaoId: params.id, ...m, publicarAgora: true }),
       })
+      setEditando(null)
       await carregar()
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Não foi possível publicar.')
@@ -212,11 +199,11 @@ export default function Pagina({ params }: { params: { id: string } }) {
         <Zap size={14} /> Publicar agora
       </h2>
       <p style={{ color: 'var(--texto-3)', fontSize: 13, marginBottom: 14 }}>
-        Um clique e o Momento chega no celular de quem está ouvindo.
+        Escolha um formato, ajuste o que precisa e publique.
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(215px, 1fr))', gap: 10 }}>
         {templates.map((t) => (
-          <button key={t.id} className="linha" disabled={ocupado} onClick={() => publicar(t)}
+          <button key={t.id} className="linha" disabled={ocupado} onClick={() => setEditando(t)}
             style={{ textAlign: 'left', padding: 16, opacity: ocupado ? .5 : 1 }}>
             <div style={{ fontWeight: 500, fontSize: 15 }}>{t.nome}</div>
             <div style={{ color: 'var(--texto-3)', fontSize: 12.5, marginTop: 6 }}>
@@ -261,6 +248,15 @@ export default function Pagina({ params }: { params: { id: string } }) {
             })}
           </div>
         </>
+      )}
+
+      {editando && (
+        <EditorMomento
+          template={editando}
+          ocupado={ocupado}
+          aoPublicar={publicar}
+          aoFechar={() => setEditando(null)}
+        />
       )}
 
       <Rodape />
