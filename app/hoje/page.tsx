@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ChevronRight, LogOut, Mic2, Gift, Zap, CalendarDays } from 'lucide-react'
-import { chamar, hora, lerOperador, lerToken, sair, type Operador } from '../../lib/api'
-import { CabecalhoMarca, Rodape } from '../marca'
+import { ChevronRight, Mic2, Gift, Zap, CalendarDays } from 'lucide-react'
+import { chamar, hora, lerToken } from '../../lib/api'
+import { CascaStudio, CabecalhoTela } from '../casca'
 
 type Edicao = {
   id: string
@@ -35,31 +35,29 @@ function Indicador({ icone, valor, rotulo }: { icone: React.ReactNode; valor: nu
 
 export default function Pagina() {
   const [dados, setDados] = useState<Hoje | null>(null)
-  const [operador, setOperador] = useState<Operador | null>(null)
   const [erro, setErro] = useState('')
 
   useEffect(() => {
     if (!lerToken()) { location.href = '/'; return }
-    setOperador(lerOperador())
     chamar<Hoje>('/studio/hoje').then(setDados).catch((e) => setErro(e.message))
   }, [])
 
-  if (erro) return <main className="container" style={{ paddingTop: 40 }}><div className="erro">{erro}</div></main>
-  if (!dados) return <main className="container" style={{ paddingTop: 40, color: 'var(--texto-3)' }}>Carregando…</main>
+  if (erro) {
+    return <CascaStudio><main style={{ padding: '22px 26px' }}><div className="erro">{erro}</div></main></CascaStudio>
+  }
+  if (!dados) {
+    return <CascaStudio><main style={{ padding: '22px 26px', color: 'var(--texto-3)' }}>Carregando…</main></CascaStudio>
+  }
 
   const aoVivo = dados.edicoes.find((e) => e.id === dados.aoVivoId) ?? null
 
   return (
-    <main className="container" style={{ paddingTop: 22, paddingBottom: 40 }}>
-      <header style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 38, flexWrap: 'wrap' }}>
-        {/* O batimento acompanha o estado: mais lento fora do ar, mais rápido no ar. */}
-        <CabecalhoMarca ritmo={dados.aoVivoId ? 'no-ar' : 'fora-do-ar'} />
-        <div style={{ flex: 1 }} />
-        <span style={{ color: 'var(--texto-2)', fontSize: 13.5 }}>{operador?.nome}</span>
-        <button className="btn-vazio" style={{ padding: '7px 12px', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }} onClick={sair}>
-          <LogOut size={15} /> Sair
-        </button>
-      </header>
+    <CascaStudio ritmo={dados.aoVivoId ? 'no-ar' : 'fora-do-ar'}>
+    <main style={{ padding: '22px 26px 40px', maxWidth: 1080 }}>
+      <CabecalhoTela
+        titulo="Hoje"
+        apoio={new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
+      />
 
       {/* O dia abre com o TRABALHO, não com saudação nem gráfico. O produtor chega
           para operar — os números do dia são a primeira coisa que ele precisa ver. */}
@@ -140,8 +138,7 @@ export default function Pagina() {
           )
         })}
       </div>
-
-      <Rodape />
     </main>
+    </CascaStudio>
   )
 }

@@ -1,10 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { ArrowLeft, LogOut, Mic2, Timer, Zap, CheckCircle2, Radio, Megaphone, ChevronDown, Trophy, Users } from 'lucide-react'
-import { chamar, contagem, hora, lerToken, sair } from '../../../lib/api'
+import { Mic2, Timer, Zap, CheckCircle2, Radio, Megaphone, ChevronDown, Trophy, Users } from 'lucide-react'
+import { chamar, contagem, hora, lerToken } from '../../../lib/api'
 import { EditorMomento, type MomentoParaPublicar } from './editor'
-import { CabecalhoMarca, Rodape } from '../../marca'
+import { CascaStudio, CabecalhoTela } from '../../casca'
 
 type Opcao = { id: string; ordem: number; rotulo: string; emoji: string | null; votos: number }
 type Momento = {
@@ -91,8 +91,20 @@ export default function Pagina({ params }: { params: { id: string } }) {
     }
   }
 
-  if (erro && !edicao) return <main className="container" style={{ paddingTop: 40 }}><div className="erro">{erro}</div></main>
-  if (!edicao) return <main className="container" style={{ paddingTop: 40, color: 'var(--texto-3)' }}>Carregando…</main>
+  if (erro && !edicao) {
+    return (
+      <CascaStudio>
+        <main style={{ padding: '22px 26px' }}><div className="erro">{erro}</div></main>
+      </CascaStudio>
+    )
+  }
+  if (!edicao) {
+    return (
+      <CascaStudio>
+        <main style={{ padding: '22px 26px', color: 'var(--texto-3)' }}>Carregando…</main>
+      </CascaStudio>
+    )
+  }
 
   const noAr = new Date(edicao.inicioEm).getTime() <= agora && new Date(edicao.fimEm).getTime() >= agora
   const ativo = edicao.momentos.find(
@@ -101,34 +113,24 @@ export default function Pagina({ params }: { params: { id: string } }) {
   const passados = edicao.momentos.filter((m) => m.id !== ativo?.id).reverse()
 
   return (
-    <main className="container" style={{ paddingTop: 22, paddingBottom: 40 }}>
-      <header style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 30 }}>
-        {/* Com Momento no ar o pulso acelera para 1,1s — dá para ler o estado da
-            operação pelo batimento da marca, sem olhar o texto. */}
-        <CabecalhoMarca compacto ritmo={ativo ? 'momento-ativo' : noAr ? 'no-ar' : 'fora-do-ar'} />
-        <div style={{ flex: 1 }} />
-        <a href="/hoje" className="btn-vazio" style={{ padding: '7px 12px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
-          <ArrowLeft size={15} /> Voltar ao dia
-        </a>
-        <button className="btn-vazio" style={{ padding: '7px 12px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }} onClick={sair}>
-          <LogOut size={15} /> Sair
-        </button>
-      </header>
-
+    /* Com Momento no ar o pulso da marca acelera para 1,1s — dá para ler o estado da
+       operação pelo batimento, de qualquer tela, sem olhar o texto. */
+    <CascaStudio ritmo={ativo ? 'momento-ativo' : noAr ? 'no-ar' : 'fora-do-ar'}>
+    <main style={{ padding: '22px 26px 40px', maxWidth: 1080 }}>
       {/*
-        No modo Ao Vivo a tela inteira muda: o produtor não navega por menus, ele opera
-        o que está acontecendo naquele instante.
+        O nome do programa é contexto, não manchete: quem opera já sabe onde está, e um
+        corpo 32 disputava atenção com o Momento no ar, que é o que importa aqui.
       */}
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, flexWrap: 'wrap' }}>
-        {noAr && <span className="etiqueta-ao-vivo"><span className="pulso" />AO VIVO</span>}
-        <h1 style={{ fontSize: 32, fontWeight: 600 }}>
-          {edicao.titulo ?? edicao.programa.nome}
-        </h1>
-        <span style={{ color: 'var(--texto-2)', fontSize: 14.5, display: 'flex', alignItems: 'center', gap: 7 }}>
-          {edicao.locutor && <><Mic2 size={14} /> {edicao.locutor.nome} ·</>}
-          <span className="numerico">{hora(edicao.inicioEm)} às {hora(edicao.fimEm)}</span>
-        </span>
-      </div>
+      <CabecalhoTela
+        etiqueta={noAr ? <span className="etiqueta-ao-vivo"><span className="pulso" />AO VIVO</span> : undefined}
+        titulo={edicao.titulo ?? edicao.programa.nome}
+        apoio={
+          <>
+            {edicao.locutor && <><Mic2 size={13} /> {edicao.locutor.nome} ·</>}
+            <span className="numerico">{hora(edicao.inicioEm)} às {hora(edicao.fimEm)}</span>
+          </>
+        }
+      />
 
       {erro && <div className="erro" style={{ marginTop: 18 }}>{erro}</div>}
 
@@ -354,8 +356,7 @@ export default function Pagina({ params }: { params: { id: string } }) {
           aoFechar={() => setEditando(null)}
         />
       )}
-
-      <Rodape />
     </main>
+    </CascaStudio>
   )
 }
