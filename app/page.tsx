@@ -73,7 +73,7 @@ export default function Entrar() {
         </form>
 
         <div style={{ marginTop: 28, display: 'flex', justifyContent: 'center' }}>
-          <PoweredByTechNow tamanho={19} />
+          <PoweredByTechNow tamanho={14} />
         </div>
       </div>
     </main>

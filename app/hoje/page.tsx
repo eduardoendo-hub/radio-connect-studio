@@ -69,9 +69,7 @@ export default function Pagina() {
       </header>
 
       {/* O dia abre com o TRABALHO, não com gráficos. Analisar vem depois de operar. */}
-      <h1 style={{ fontSize: 34, fontWeight: 600 }}>
-        {saudacao()}, {operador?.nome?.split(' ')[0]}.
-      </h1>
+      <h1 style={{ fontSize: 34, fontWeight: 600 }}>{saudacao()}.</h1>
 
       <div style={{ display: 'flex', gap: 26, flexWrap: 'wrap', marginTop: 14, fontSize: 14.5 }}>
         <Indicador icone={<CalendarDays size={17} />} valor={dados.resumo.programas} rotulo="programas hoje" />
@@ -119,7 +117,15 @@ export default function Pagina() {
               display: 'flex', alignItems: 'center', gap: 16, padding: '14px 18px',
               borderColor: noAr ? 'rgba(227,39,30,.32)' : undefined,
             }}>
-              <div style={{ width: 3, height: 36, borderRadius: 2, background: e.programa.corDestaque ?? 'var(--borda-forte)' }} />
+              {/* Uma cor só para todos: a barra marca o ritmo da grade, não identifica
+                  o programa. Cores diferentes por programa viravam ruído numa lista que
+                  o produtor lê dezenas de vezes por dia. O vermelho fica reservado para
+                  o que está no ar. */}
+              <div style={{
+                width: 3, height: 36, borderRadius: 2,
+                background: noAr ? 'var(--ao-vivo)' : 'var(--accent)',
+                opacity: noAr ? 1 : .5,
+              }} />
               <div className="numerico" style={{ width: 52, color: 'var(--texto-2)', fontSize: 14 }}>
                 {hora(e.inicioEm)}
               </div>

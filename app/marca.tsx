@@ -125,11 +125,11 @@ export function CabecalhoMarca({
   )
 }
 
-export function PoweredByTechNow({ tamanho = 22 }: { tamanho?: number }) {
+export function PoweredByTechNow({ tamanho = 14 }: { tamanho?: number }) {
   return (
-    <span style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 'none' }}>
+    <span style={{ display: 'flex', alignItems: 'center', gap: 7, flex: 'none', opacity: .72 }}>
       <span style={{
-        fontSize: 9.5, letterSpacing: '.22em', color: 'var(--texto-3)',
+        fontSize: 8, letterSpacing: '.18em', color: 'var(--texto-3)',
         textTransform: 'uppercase', fontWeight: 500,
       }}>
         powered by
@@ -167,7 +167,7 @@ export function Rodape() {
         <MarcaPulso tamanho={20} />
         <AssinaturaStudio tamanho={13} />
       </span>
-      <PoweredByTechNow tamanho={18} />
+      <PoweredByTechNow tamanho={13} />
     </footer>
   )
 }
