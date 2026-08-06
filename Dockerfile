@@ -14,6 +14,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV TZ=America/Sao_Paulo
 ENV PORT=3001
+# Sem isto o server.js do Next standalone escuta so em localhost/IPv6 dentro do
+# container, e o proxy do Coolify nao alcanca — resultado: 502.
+ENV HOSTNAME=0.0.0.0
 COPY --from=build /app/.next/standalone ./
 COPY --from=build /app/.next/static ./.next/static
 COPY --from=build /app/public ./public
