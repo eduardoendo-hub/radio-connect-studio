@@ -1,17 +1,18 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ChevronRight, Mic2, Gift, Zap, CalendarDays } from 'lucide-react'
+import { ChevronRight, Gift, Zap, CalendarDays } from 'lucide-react'
 import { chamar, hora, lerToken } from '../../lib/api'
 import { CascaStudio, CabecalhoTela } from '../casca'
+import { Equipe, equipeDaEdicao, type Pessoa } from '../avatar'
 
 type Edicao = {
   id: string
   inicioEm: string
   fimEm: string
   titulo: string | null
-  programa: { id: string; nome: string; corDestaque: string | null }
-  locutor: { id: string; nome: string } | null
+  programa: { id: string; nome: string; corDestaque: string | null; equipe?: Pessoa[] }
+  locutor: Pessoa | null
   _count: { momentos: number }
 }
 
@@ -83,8 +84,16 @@ export default function Pagina() {
               <div className="display" style={{ fontSize: 25, fontWeight: 600, marginTop: 13 }}>
                 {aoVivo.titulo ?? aoVivo.programa.nome}
               </div>
-              <div style={{ color: 'var(--texto-2)', marginTop: 6, fontSize: 14, display: 'flex', alignItems: 'center', gap: 7 }}>
-                {aoVivo.locutor && <><Mic2 size={14} /> {aoVivo.locutor.nome} ·</>}
+              <div style={{ color: 'var(--texto-2)', marginTop: 9, fontSize: 14, display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
+                {(() => {
+                  const time = equipeDaEdicao(aoVivo.locutor, aoVivo.programa.equipe)
+                  return time.length > 0 && (
+                    <>
+                      <Equipe pessoas={time} tamanho={26} />
+                      <span>{time.map((p) => p.nome).join(', ')} ·</span>
+                    </>
+                  )
+                })()}
                 <span className="numerico">{hora(aoVivo.inicioEm)} às {hora(aoVivo.fimEm)}</span>
               </div>
             </div>
@@ -119,11 +128,21 @@ export default function Pagina() {
               <div className="numerico" style={{ width: 52, color: 'var(--texto-2)', fontSize: 14 }}>
                 {hora(e.inicioEm)}
               </div>
-              <div style={{ flex: 1 }}>
+              {/* O rosto antes do nome: com quinze programas no dia, o produtor varre
+                  a grade pela cor de quem está no ar muito mais rápido do que lendo
+                  nome por nome. */}
+              {(() => {
+                const time = equipeDaEdicao(e.locutor, e.programa.equipe)
+                return time.length > 0 ? <Equipe pessoas={time} tamanho={26} /> : null
+              })()}
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 500, fontSize: 15.5 }}>{e.titulo ?? e.programa.nome}</div>
                 {e.locutor && (
-                  <div style={{ color: 'var(--texto-3)', fontSize: 13, marginTop: 3, display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <Mic2 size={12} /> {e.locutor.nome}
+                  <div style={{
+                    color: 'var(--texto-3)', fontSize: 13, marginTop: 3,
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                  }}>
+                    {equipeDaEdicao(e.locutor, e.programa.equipe).map((p) => p.nome).join(', ')}
                   </div>
                 )}
               </div>

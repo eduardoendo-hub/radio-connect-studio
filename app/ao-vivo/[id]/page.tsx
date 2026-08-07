@@ -1,10 +1,11 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Mic2, Timer, Zap, CheckCircle2, Radio, Megaphone, ChevronDown, Trophy, Users } from 'lucide-react'
+import { Timer, Zap, CheckCircle2, Radio, Megaphone, ChevronDown, Trophy, Users } from 'lucide-react'
 import { chamar, contagem, hora, lerToken } from '../../../lib/api'
 import { EditorMomento, type MomentoParaPublicar } from './editor'
 import { CascaStudio, CabecalhoTela } from '../../casca'
+import { Equipe, equipeDaEdicao, type Pessoa } from '../../avatar'
 
 type Opcao = { id: string; ordem: number; rotulo: string; emoji: string | null; votos: number }
 type Momento = {
@@ -23,8 +24,8 @@ type Edicao = {
   inicioEm: string
   fimEm: string
   titulo: string | null
-  programa: { nome: string; corDestaque: string | null }
-  locutor: { nome: string } | null
+  programa: { nome: string; corDestaque: string | null; equipe?: Pessoa[] }
+  locutor: Pessoa | null
   momentos: Momento[]
 }
 import type { Template } from './editor'
@@ -126,7 +127,15 @@ export default function Pagina({ params }: { params: { id: string } }) {
         titulo={edicao.titulo ?? edicao.programa.nome}
         apoio={
           <>
-            {edicao.locutor && <><Mic2 size={13} /> {edicao.locutor.nome} ·</>}
+            {(() => {
+              const time = equipeDaEdicao(edicao.locutor, edicao.programa.equipe)
+              return time.length > 0 && (
+                <>
+                  <Equipe pessoas={time} tamanho={24} />
+                  <span>{time.map((p) => p.nome).join(', ')} ·</span>
+                </>
+              )
+            })()}
             <span className="numerico">{hora(edicao.inicioEm)} às {hora(edicao.fimEm)}</span>
           </>
         }
