@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { AlertTriangle, Clock, Eye, EyeOff, Image as Icone, X, Zap } from 'lucide-react'
+import { AlertTriangle, Clock, Eye, EyeOff, Image as Icone, Megaphone, MessageCircleQuestion, Upload, X, Zap } from 'lucide-react'
+import { enviarImagem } from '../../../lib/api'
 
 /**
  * O editor do Fofocômetro.
@@ -25,10 +26,12 @@ export type FofocaParaPublicar = {
   titulo: string
   duracaoSegundos: number
   templateId: string
+  opcoes?: { rotulo: string; emoji?: string }[]
   fofoca: {
     revelarEm: string
     revelacao: { texto: string; imagemUrl?: string | null }
     fonte?: string | null
+    patrocinador?: { nome: string; logoUrl?: string | null } | null
   }
 }
 
@@ -60,6 +63,19 @@ export function EditorFofocometro({
   const [fonte, setFonte] = useState('')
   const [espera, setEspera] = useState(300)
   const [previa, setPrevia] = useState(false)
+  const [enviandoFoto, setEnviandoFoto] = useState(false)
+  const [erroFoto, setErroFoto] = useState('')
+
+  // Palpite: opcional, e por isso um interruptor e não um campo sempre presente.
+  // A maior parte das fofocas não comporta chute — forçar três opções em todas faria
+  // o produtor inventar alternativa por obrigação, que é pior que não ter.
+  const [comPalpite, setComPalpite] = useState(false)
+  const [palpites, setPalpites] = useState(['', '', ''])
+
+  const [comPatrocinio, setComPatrocinio] = useState(false)
+  const [patrocinador, setPatrocinador] = useState('')
+  const [logoUrl, setLogoUrl] = useState('')
+  const [enviandoLogo, setEnviandoLogo] = useState(false)
   const campoGancho = useRef<HTMLTextAreaElement>(null)
 
   // O foco começa no gancho: é a frase que decide se alguém vai esperar.
@@ -81,11 +97,16 @@ export function EditorFofocometro({
 
   function publicar() {
     if (!pronto || ocupado) return
+    const opcoes = comPalpite
+      ? palpites.map((p) => p.trim()).filter(Boolean).map((rotulo) => ({ rotulo }))
+      : []
+
     aoPublicar({
       tipo: 'FOFOCOMETRO',
       titulo: gancho.trim(),
       duracaoSegundos: espera,
       templateId,
+      ...(opcoes.length >= 2 ? { opcoes } : {}),
       fofoca: {
         revelarEm: new Date(Date.now() + espera * 1000).toISOString(),
         revelacao: {
@@ -93,6 +114,10 @@ export function EditorFofocometro({
           imagemUrl: imagemUrl.trim() || null,
         },
         fonte: fonte.trim() || null,
+        patrocinador:
+          comPatrocinio && patrocinador.trim()
+            ? { nome: patrocinador.trim(), logoUrl: logoUrl.trim() || null }
+            : null,
       },
     })
   }
@@ -170,16 +195,139 @@ export function EditorFofocometro({
           </div>
         </div>
 
+        {/* A foto vem do computador, não de uma URL.
+            Pedir link era pedir que alguém subisse a imagem em outro lugar antes — no
+            meio de um programa ao vivo, com o gancho já pensado, isso não acontece. */}
         <div style={{ marginTop: 14 }}>
           <label className="rotulo" style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <Icone size={13} /> Foto <span style={{ color: 'var(--texto-3)' }}>· opcional</span>
+            <Icone size={13} /> Foto da revelação <span style={{ color: 'var(--texto-3)' }}>· opcional</span>
           </label>
-          <input
-            className="campo"
-            value={imagemUrl}
-            onChange={(e) => setImagemUrl(e.target.value)}
-            placeholder="https://…"
-          />
+          {imagemUrl ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={imagemUrl} alt="" style={{
+                width: 96, height: 60, objectFit: 'cover', borderRadius: 8,
+                border: '1px solid var(--borda)',
+              }} />
+              <button className="btn-vazio" style={{ fontSize: 13, padding: '8px 13px' }}
+                onClick={() => setImagemUrl('')}>
+                Trocar
+              </button>
+            </div>
+          ) : (
+            <label className="linha" style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+              padding: '18px 14px', cursor: 'pointer', color: 'var(--texto-2)', fontSize: 13.5,
+            }}>
+              <Upload size={16} />
+              {enviandoFoto ? 'Enviando…' : 'Escolher do computador'}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                style={{ display: 'none' }}
+                onChange={async (e) => {
+                  const f = e.target.files?.[0]
+                  if (!f) return
+                  setEnviandoFoto(true)
+                  setErroFoto('')
+                  try {
+                    setImagemUrl(await enviarImagem(f))
+                  } catch (err) {
+                    setErroFoto(err instanceof Error ? err.message : 'Não deu para enviar.')
+                  } finally {
+                    setEnviandoFoto(false)
+                  }
+                }}
+              />
+            </label>
+          )}
+          {erroFoto && <div className="erro" style={{ marginTop: 8, fontSize: 13 }}>{erroFoto}</div>}
+        </div>
+
+        {/* Palpite durante a espera. */}
+        <div style={{ marginTop: 18 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={comPalpite}
+              onChange={(e) => setComPalpite(e.target.checked)}
+              style={{ width: 17, height: 17, accentColor: 'var(--accent)' }}
+            />
+            <MessageCircleQuestion size={15} style={{ color: 'var(--accent)' }} />
+            <span style={{ fontSize: 14 }}>Deixar o ouvinte palpitar enquanto espera</span>
+          </label>
+          <p style={{ fontSize: 11.5, color: 'var(--texto-3)', marginTop: 7, marginLeft: 27, lineHeight: 1.5 }}>
+            Espera passiva vira participação — e quem palpitou volta para saber se
+            acertou.
+          </p>
+          {comPalpite && (
+            <div style={{ display: 'grid', gap: 8, marginTop: 10, marginLeft: 27 }}>
+              {palpites.map((p, i) => (
+                <input
+                  key={i}
+                  className="campo"
+                  value={p}
+                  onChange={(e) => setPalpites(palpites.map((v, j) => (j === i ? e.target.value : v)))}
+                  placeholder={`Palpite ${i + 1}${i === 2 ? ' (opcional)' : ''}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Patrocínio da espera. */}
+        <div style={{ marginTop: 18 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={comPatrocinio}
+              onChange={(e) => setComPatrocinio(e.target.checked)}
+              style={{ width: 17, height: 17, accentColor: 'var(--rosa)' }}
+            />
+            <Megaphone size={15} style={{ color: 'var(--rosa)' }} />
+            <span style={{ fontSize: 14 }}>Este Fofocômetro tem patrocinador</span>
+          </label>
+          <p style={{ fontSize: 11.5, color: 'var(--texto-3)', marginTop: 7, marginLeft: 27, lineHeight: 1.5 }}>
+            A assinatura fica na tela durante a contagem — que é o tempo em que a marca
+            tem a atenção inteira de quem está esperando.
+          </p>
+          {comPatrocinio && (
+            <div style={{ display: 'grid', gap: 9, marginTop: 10, marginLeft: 27 }}>
+              <input
+                className="campo"
+                value={patrocinador}
+                onChange={(e) => setPatrocinador(e.target.value)}
+                placeholder="Nome do patrocinador"
+              />
+              {logoUrl ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={logoUrl} alt="" style={{ maxHeight: 28, maxWidth: 120, objectFit: 'contain' }} />
+                  <button className="btn-vazio" style={{ fontSize: 13, padding: '7px 12px' }}
+                    onClick={() => setLogoUrl('')}>Trocar logo</button>
+                </div>
+              ) : (
+                <label className="linha" style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+                  padding: '13px', cursor: 'pointer', color: 'var(--texto-2)', fontSize: 13,
+                }}>
+                  <Upload size={15} />
+                  {enviandoLogo ? 'Enviando…' : 'Logo do patrocinador (opcional)'}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    style={{ display: 'none' }}
+                    onChange={async (e) => {
+                      const f = e.target.files?.[0]
+                      if (!f) return
+                      setEnviandoLogo(true)
+                      try { setLogoUrl(await enviarImagem(f)) } finally { setEnviandoLogo(false) }
+                    }}
+                  />
+                </label>
+              )}
+            </div>
+          )}
         </div>
 
         <div style={{ marginTop: 18 }}>

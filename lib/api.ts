@@ -124,3 +124,26 @@ export function contagem(ate: string): string {
   const m = Math.floor(s / 60)
   return `${String(m).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
 }
+
+/**
+ * Envia uma imagem e devolve a URL.
+ *
+ * O corpo vai cru, sem multipart: é exatamente um arquivo, e um envelope de formulário
+ * só acrescentaria dependência dos dois lados para transportar a mesma coisa.
+ */
+export async function enviarImagem(arquivo: File): Promise<string> {
+  const token = lerToken()
+  const r = await fetch(`${API}/studio/imagens`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': arquivo.type,
+      'X-Tenant': TENANT,
+      'X-Nome-Arquivo': encodeURIComponent(arquivo.name).slice(0, 120),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: arquivo,
+  })
+  const corpo = await r.json().catch(() => ({}))
+  if (!r.ok) throw new ErroApi(r.status, corpo.erro ?? 'erro', corpo.mensagem ?? 'Não deu para enviar a imagem.')
+  return corpo.url as string
+}
