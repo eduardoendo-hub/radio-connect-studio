@@ -453,18 +453,24 @@ a { color: inherit; text-decoration: none; }
   background-size: 22px 22px;
 }
 
+.chat-linha { display: flex; flex-direction: column; align-items: flex-start; }
+.chat-linha.minha { align-items: flex-end; }
+/* O marco de programa é da conversa, não de um dos lados: fica sempre centrado. */
+.chat-linha .chat-marco { align-self: center; }
+
+/* O ouvinte fala em cinza neutro; a rádio responde no teal da casa. As duas cores
+   precisam ser distinguíveis de relance numa conversa longa — se ficarem parecidas,
+   o produtor perde tempo lendo para descobrir quem falou o quê. */
 .chat-balao {
   max-width: 74%;
-  align-self: flex-start;
-  background: var(--superficie-alta);
+  background: #202b2b;
+  border: 1px solid rgba(255, 255, 255, .06);
   border-radius: 14px 14px 14px 4px;
   padding: 10px 13px 7px;
 }
-/* A resposta da rádio vem no teal da casa — o produtor vê de relance o que já respondeu. */
 .chat-balao.minha {
-  align-self: flex-end;
-  background: rgba(129, 216, 208, .16);
-  border: 1px solid rgba(129, 216, 208, .25);
+  background: rgba(129, 216, 208, .17);
+  border: 1px solid rgba(129, 216, 208, .32);
   border-radius: 14px 14px 4px 14px;
 }
 .chat-hora { font-size: 10.5px; color: var(--texto-3); text-align: right; margin-top: 3px; }

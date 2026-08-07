@@ -224,7 +224,10 @@ export default function Pagina() {
                     const programa = m.edicao?.programa.nome
                     const anterior = mensagens[i - 1]?.edicao?.programa.nome
                     return (
-                      <div key={m.id}>
+                      // O alinhamento mora aqui, não no balão: o filho direto da
+                      // coluna é esta linha, e é ela que decide de que lado a
+                      // mensagem encosta.
+                      <div key={m.id} className={`chat-linha${minha ? ' minha' : ''}`}>
                         {programa && programa !== anterior && (
                           <div className="chat-marco">
                             <Radio size={11} /> durante {programa}
