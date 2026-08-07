@@ -148,9 +148,9 @@ export function CascaStudio({
           <Image
             src="/marca/bandfm-logo.webp"
             alt="Band FM"
-            width={82}
-            height={27}
-            style={{ objectFit: 'contain', height: 27, width: 'auto' }}
+            width={41}
+            height={14}
+            style={{ objectFit: 'contain', height: 14, width: 'auto' }}
             priority
           />
         </div>

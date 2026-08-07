@@ -270,9 +270,11 @@ a { color: inherit; text-decoration: none; }
 
 /* A emissora entra como legenda do Studio, não como segunda marca: rótulo minúsculo
    e o logo em tamanho de assinatura. Diz de quem é a operação sem disputar o topo. */
+/* O logo caiu para metade da altura, então o respiro em volta acompanha: mantido o
+   espaçamento antigo, a legenda ficaria boiando num bloco grande demais para ela. */
 .casca-emissora {
-  display: flex; flex-direction: column; align-items: flex-start; gap: 7px;
-  padding: 4px 16px 18px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+  padding: 2px 16px 14px;
   margin-bottom: 6px;
   border-bottom: 1px solid var(--borda);
 }
