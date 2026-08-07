@@ -8,25 +8,79 @@ const CHAVE_OPERADOR = 'rc.studio.operador'
 
 export type Operador = { id: string; nome: string; email: string; papel: string }
 
+/**
+ * Onde a sessão mora.
+ *
+ * `localStorage` é o lugar certo, mas nem sempre está disponível: navegação privada
+ * no Safari, cookies de terceiros bloqueados, política de empresa. Quando ele falha,
+ * falha **lançando** — e o login inteiro ia junto.
+ *
+ * O sintoma era o pior possível para diagnosticar: a pessoa digitava a senha certa,
+ * a API respondia 200 com o token, e a tela voltava para o login sem dizer nada. Não
+ * havia mensagem de erro porque, do ponto de vista da API, tinha dado tudo certo.
+ *
+ * Agora existe um plano B em memória. Ele não sobrevive a um F5 — e por isso a tela
+ * avisa —, mas permite trabalhar a sessão inteira sem entrar em loop.
+ */
+let memoria: Record<string, string> = {}
+
+export let armazenamentoVolatil = false
+
+function guardar(chave: string, valor: string) {
+  try {
+    localStorage.setItem(chave, valor)
+  } catch {
+    armazenamentoVolatil = true
+    memoria[chave] = valor
+  }
+}
+
+function ler(chave: string): string | null {
+  try {
+    const v = localStorage.getItem(chave)
+    if (v !== null) return v
+  } catch {
+    armazenamentoVolatil = true
+  }
+  return memoria[chave] ?? null
+}
+
+function remover(chave: string) {
+  try {
+    localStorage.removeItem(chave)
+  } catch {
+    /* nada a fazer: o plano B é limpo logo abaixo */
+  }
+  delete memoria[chave]
+}
+
 export function guardarSessao(token: string, operador: Operador) {
-  localStorage.setItem(CHAVE_TOKEN, token)
-  localStorage.setItem(CHAVE_OPERADOR, JSON.stringify(operador))
+  guardar(CHAVE_TOKEN, token)
+  guardar(CHAVE_OPERADOR, JSON.stringify(operador))
 }
 
 export function lerToken(): string | null {
   if (typeof window === 'undefined') return null
-  return localStorage.getItem(CHAVE_TOKEN)
+  return ler(CHAVE_TOKEN)
 }
 
 export function lerOperador(): Operador | null {
   if (typeof window === 'undefined') return null
-  const bruto = localStorage.getItem(CHAVE_OPERADOR)
-  return bruto ? (JSON.parse(bruto) as Operador) : null
+  const bruto = ler(CHAVE_OPERADOR)
+  if (!bruto) return null
+  // Um JSON corrompido não pode derrubar a tela inteira — melhor perder o nome do
+  // operador do que perder o Studio.
+  try {
+    return JSON.parse(bruto) as Operador
+  } catch {
+    return null
+  }
 }
 
 export function sair() {
-  localStorage.removeItem(CHAVE_TOKEN)
-  localStorage.removeItem(CHAVE_OPERADOR)
+  remover(CHAVE_TOKEN)
+  remover(CHAVE_OPERADOR)
+  memoria = {}
   location.href = '/'
 }
 
