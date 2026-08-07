@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Timer, Zap, CheckCircle2, Radio, Megaphone, ChevronDown, Trophy, Users } from 'lucide-react'
+import { AlertTriangle, Timer, Zap, CheckCircle2, Radio, Megaphone, ChevronDown, Trophy, Users } from 'lucide-react'
 import { chamar, contagem, hora, lerToken } from '../../../lib/api'
 import { EditorMomento, type MomentoParaPublicar } from './editor'
 import { CascaStudio, CabecalhoTela } from '../../casca'
@@ -140,6 +140,33 @@ export default function Pagina({ params }: { params: { id: string } }) {
           </>
         }
       />
+
+      {/*
+        A grade vira sozinha, e o produtor não vira junto.
+
+        Ficar com esta tela aberta enquanto o programa acaba é o cenário mais comum do
+        turno — e publicar aqui depois disso cria um Momento preso a um programa que já
+        saiu do ar: ativo no banco, invisível no No Ar do ouvinte. O aviso aparece no
+        instante da virada, com o caminho para a operação que está valendo.
+      */}
+      {!noAr && (
+        <div style={{
+          marginTop: 18, padding: '14px 16px', borderRadius: 'var(--raio)',
+          background: 'rgba(227,39,30,.08)', border: '1px solid rgba(227,39,30,.3)',
+          display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+        }}>
+          <AlertTriangle size={17} style={{ color: 'var(--ao-vivo)', flex: 'none' }} />
+          <span style={{ flex: 1, minWidth: 220, fontSize: 14, color: 'var(--texto)' }}>
+            <strong style={{ fontWeight: 600 }}>Este programa não está mais no ar.</strong>{' '}
+            <span style={{ color: 'var(--texto-2)' }}>
+              O que você publicar aqui não vai aparecer no aplicativo.
+            </span>
+          </span>
+          <a href="/hoje" className="btn" style={{ fontSize: 13.5, padding: '9px 14px', flex: 'none' }}>
+            Ir para o que está no ar
+          </a>
+        </div>
+      )}
 
       {erro && <div className="erro" style={{ marginTop: 18 }}>{erro}</div>}
 
