@@ -127,24 +127,33 @@ export function CascaStudio({
       {aberto && <div className="casca-veu" onClick={() => setAberto(false)} />}
 
       <aside className={`casca-menu${aberto ? ' aberto' : ''}`}>
+        {/*
+          A hierarquia é essa e não a inversa: o Studio é o produto que a pessoa está
+          usando, a rádio é o contexto de qual operação ela está operando. Dois logos
+          do mesmo tamanho, um sobre o outro, não formam um lockup — formam uma pilha,
+          e nenhum dos dois fica dono do lugar.
+        */}
         <div className="casca-marca">
-          <Image
-            src="/marca/bandfm-logo.webp"
-            alt="Band FM"
-            width={86}
-            height={28}
-            style={{ objectFit: 'contain', height: 28, width: 'auto' }}
-            priority
-          />
+          <a href="/hoje" className="casca-studio">
+            <MarcaPulso tamanho={26} ritmo={batimento} />
+            <AssinaturaStudio tamanho={15} />
+          </a>
           <button className="casca-fechar" onClick={() => setAberto(false)} aria-label="Fechar menu">
             <X size={18} />
           </button>
         </div>
 
-        <a href="/hoje" className="casca-studio">
-          <MarcaPulso tamanho={24} ritmo={batimento} />
-          <AssinaturaStudio tamanho={14} />
-        </a>
+        <div className="casca-emissora">
+          <span className="casca-emissora-rotulo">operando</span>
+          <Image
+            src="/marca/bandfm-logo.webp"
+            alt="Band FM"
+            width={64}
+            height={21}
+            style={{ objectFit: 'contain', height: 21, width: 'auto' }}
+            priority
+          />
+        </div>
 
         <nav className="casca-nav">
           {GRUPOS.map((g, gi) => (
