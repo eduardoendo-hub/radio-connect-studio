@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { AlertTriangle, Timer, Zap, CheckCircle2, Radio, Megaphone, ChevronDown, Trophy, Users } from 'lucide-react'
 import { chamar, contagem, hora, lerToken } from '../../../lib/api'
 import { EditorMomento, type MomentoParaPublicar } from './editor'
+import { EditorFofocometro, type FofocaParaPublicar } from './fofocometro'
 import { CascaStudio, CabecalhoTela } from '../../casca'
 import { Equipe, equipeDaEdicao, type Pessoa } from '../../avatar'
 
@@ -62,7 +63,7 @@ export default function Pagina({ params }: { params: { id: string } }) {
     return () => clearInterval(t)
   }, [carregar])
 
-  async function publicar(m: MomentoParaPublicar) {
+  async function publicar(m: MomentoParaPublicar | FofocaParaPublicar) {
     if (ocupado) return
     setOcupado(true)
     setErro('')
@@ -243,11 +244,22 @@ export default function Pagina({ params }: { params: { id: string } }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(215px, 1fr))', gap: 10 }}>
         {templates.map((t) => (
           <button key={t.id} className="linha" disabled={ocupado} onClick={() => setEditando(t)}
-            style={{ textAlign: 'left', padding: 16, opacity: ocupado ? .5 : 1 }}>
-            <div style={{ fontWeight: 500, fontSize: 15 }}>{t.nome}</div>
+            style={{
+              textAlign: 'left', padding: 16, opacity: ocupado ? .5 : 1,
+              // O Fofocômetro é o único formato que segura audiência em vez de pedir
+              // resposta. Ganha o filete rosa para não se perder entre as enquetes.
+              borderColor: t.tipo === 'FOFOCOMETRO' ? 'rgba(232,67,123,.4)' : undefined,
+            }}>
+            <div style={{ fontWeight: 500, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8 }}>
+              {t.tipo === 'FOFOCOMETRO' && <Zap size={14} style={{ color: 'var(--rosa)' }} />}
+              {t.nome}
+            </div>
             <div style={{ color: 'var(--texto-3)', fontSize: 12.5, marginTop: 6 }}>
-              {t.tipo.toLowerCase()} · {Math.round(t.duracaoSegundos / 60)} min
-              {t.opcoesPadrao.length > 0 && ` · ${t.opcoesPadrao.length} opções`}
+              {t.tipo === 'FOFOCOMETRO'
+                ? 'gancho agora · revelação com hora marcada'
+                : `${t.tipo.toLowerCase()} · ${Math.round(t.duracaoSegundos / 60)} min${
+                    t.opcoesPadrao.length > 0 ? ` · ${t.opcoesPadrao.length} opções` : ''
+                  }`}
             </div>
           </button>
         ))}
@@ -385,12 +397,24 @@ export default function Pagina({ params }: { params: { id: string } }) {
       )}
 
       {editando && (
-        <EditorMomento
-          template={editando}
-          ocupado={ocupado}
-          aoPublicar={publicar}
-          aoFechar={() => setEditando(null)}
-        />
+        // O Fofocômetro tem editor próprio: gancho, revelação, hora e fonte não cabem
+        // no formulário de opções dos outros formatos.
+        editando.tipo === 'FOFOCOMETRO' ? (
+          <EditorFofocometro
+            templateId={editando.id}
+            ganchoSugerido={editando.titulo}
+            ocupado={ocupado}
+            aoPublicar={publicar}
+            aoFechar={() => setEditando(null)}
+          />
+        ) : (
+          <EditorMomento
+            template={editando}
+            ocupado={ocupado}
+            aoPublicar={publicar}
+            aoFechar={() => setEditando(null)}
+          />
+        )
       )}
     </main>
     </CascaStudio>
