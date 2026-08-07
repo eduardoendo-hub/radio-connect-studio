@@ -73,7 +73,14 @@ export default function Entrar() {
               type="email"
               autoComplete="username"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              // O espaço sai enquanto se digita, não na hora de enviar.
+              //
+              // Isto não é preciosismo: `type="email"` com `required` faz o navegador
+              // barrar o envio ANTES de qualquer JavaScript rodar. Com um espaço
+              // colado junto ao endereço, clicar em Entrar simplesmente não fazia
+              // nada — nenhuma requisição, nenhuma mensagem, nenhum rastro. Limpar no
+              // envio não adiantava porque o envio nunca acontecia.
+              onChange={(e) => setEmail(e.target.value.replace(/\s/g, ''))}
               placeholder="voce@suaradio.com.br"
               required
             />
@@ -86,7 +93,9 @@ export default function Entrar() {
               type="password"
               autoComplete="current-password"
               value={senha}
-              onChange={(e) => setSenha(e.target.value)}
+              // Espaço nas pontas de senha é sempre resíduo de cópia. No meio pode ser
+              // intenção, então só as pontas saem.
+              onChange={(e) => setSenha(e.target.value.replace(/^\s+|\s+$/g, ''))}
               required
             />
           </div>
