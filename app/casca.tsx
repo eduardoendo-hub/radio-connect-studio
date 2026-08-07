@@ -148,9 +148,12 @@ export function CascaStudio({
           <Image
             src="/marca/bandfm-logo.webp"
             alt="Band FM"
-            width={41}
-            height={14}
-            style={{ objectFit: 'contain', height: 14, width: 'auto' }}
+            // 22px. Metade da altura original deixava o mascote e as letras virarem um
+            // borrão; aqui o logotipo completo se lê, e continua abaixo dos 26px da
+            // marca do Studio — que é quem manda no topo.
+            width={67}
+            height={22}
+            style={{ objectFit: 'contain', height: 22, width: 'auto' }}
             priority
           />
         </div>
