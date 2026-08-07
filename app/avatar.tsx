@@ -75,7 +75,13 @@ export function Avatar({
           alt={pessoa.nome}
           width={tamanho}
           height={tamanho}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          // `50% 25%` puxa o recorte para cima: retrato tem o rosto no terço
+          // superior, e um círculo centrado na imagem corta a testa e sobra ombro.
+          // Mesmo enquadramento do app — as duas telas mostram a mesma pessoa.
+          style={{
+            width: '100%', height: '100%', objectFit: 'cover',
+            objectPosition: '50% 25%', display: 'block',
+          }}
         />
       ) : (
         <Silhueta />
