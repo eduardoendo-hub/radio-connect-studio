@@ -20,7 +20,7 @@ export type Pessoa = { id?: string; nome: string; imagemUrl?: string | null }
 /** Paleta quente, da família da marca. Nenhum cinza: rosto apagado parece conta desativada. */
 const PALETAS: [string, string][] = [
   ['#F6821F', '#9A4A05'], // laranja da casa
-  ['#E3271E', '#8A1410'], // vermelho no ar
+  ['#F0574D', '#A62A22'], // vermelho no ar
   ['#6E56CF', '#3A2A78'], // roxo
   ['#22A06B', '#11543A'], // verde
   ['#1E4FD8', '#0F2A78'], // azul

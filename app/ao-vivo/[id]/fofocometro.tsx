@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { AlertTriangle, Clock, Eye, EyeOff, Image as Icone, Megaphone, MessageCircleQuestion, Upload, X, Zap } from 'lucide-react'
 import { enviarImagem } from '../../../lib/api'
+import { SeletorPatrocinador } from '../../patrocinador'
 
 /**
  * O editor do Fofocômetro.
@@ -26,12 +27,12 @@ export type FofocaParaPublicar = {
   titulo: string
   duracaoSegundos: number
   templateId: string
+  campanhaPatrocinadoraId?: string
   opcoes?: { rotulo: string; emoji?: string }[]
   fofoca: {
     revelarEm: string
     revelacao: { texto: string; imagemUrl?: string | null }
     fonte?: string | null
-    patrocinador?: { nome: string; logoUrl?: string | null } | null
   }
 }
 
@@ -72,10 +73,13 @@ export function EditorFofocometro({
   const [comPalpite, setComPalpite] = useState(false)
   const [palpites, setPalpites] = useState(['', '', ''])
 
-  const [comPatrocinio, setComPatrocinio] = useState(false)
-  const [patrocinador, setPatrocinador] = useState('')
-  const [logoUrl, setLogoUrl] = useState('')
-  const [enviandoLogo, setEnviandoLogo] = useState(false)
+  // O patrocínio saiu do texto livre e virou relação com a campanha.
+  //
+  // Nome digitado à mão foi dívida minha: funcionava na tela e não somava em lugar
+  // nenhum — a rádio não conseguia provar a entrega de uma campanha a partir dele. O
+  // seletor é o mesmo de qualquer Momento, porque patrocínio nunca foi exclusividade
+  // do Fofocômetro.
+  const [patrocinio, setPatrocinio] = useState<string | null>(null)
   const campoGancho = useRef<HTMLTextAreaElement>(null)
 
   // O foco começa no gancho: é a frase que decide se alguém vai esperar.
@@ -106,6 +110,7 @@ export function EditorFofocometro({
       titulo: gancho.trim(),
       duracaoSegundos: espera,
       templateId,
+      campanhaPatrocinadoraId: patrocinio ?? undefined,
       ...(opcoes.length >= 2 ? { opcoes } : {}),
       fofoca: {
         revelarEm: new Date(Date.now() + espera * 1000).toISOString(),
@@ -114,10 +119,6 @@ export function EditorFofocometro({
           imagemUrl: imagemUrl.trim() || null,
         },
         fonte: fonte.trim() || null,
-        patrocinador:
-          comPatrocinio && patrocinador.trim()
-            ? { nome: patrocinador.trim(), logoUrl: logoUrl.trim() || null }
-            : null,
       },
     })
   }
@@ -275,60 +276,12 @@ export function EditorFofocometro({
           )}
         </div>
 
-        {/* Patrocínio da espera. */}
-        <div style={{ marginTop: 18 }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={comPatrocinio}
-              onChange={(e) => setComPatrocinio(e.target.checked)}
-              style={{ width: 17, height: 17, accentColor: 'var(--rosa)' }}
-            />
-            <Megaphone size={15} style={{ color: 'var(--rosa)' }} />
-            <span style={{ fontSize: 14 }}>Este Fofocômetro tem patrocinador</span>
-          </label>
-          <p style={{ fontSize: 11.5, color: 'var(--texto-3)', marginTop: 7, marginLeft: 27, lineHeight: 1.5 }}>
-            A assinatura fica na tela durante a contagem — que é o tempo em que a marca
-            tem a atenção inteira de quem está esperando.
-          </p>
-          {comPatrocinio && (
-            <div style={{ display: 'grid', gap: 9, marginTop: 10, marginLeft: 27 }}>
-              <input
-                className="campo"
-                value={patrocinador}
-                onChange={(e) => setPatrocinador(e.target.value)}
-                placeholder="Nome do patrocinador"
-              />
-              {logoUrl ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={logoUrl} alt="" style={{ maxHeight: 28, maxWidth: 120, objectFit: 'contain' }} />
-                  <button className="btn-vazio" style={{ fontSize: 13, padding: '7px 12px' }}
-                    onClick={() => setLogoUrl('')}>Trocar logo</button>
-                </div>
-              ) : (
-                <label className="linha" style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
-                  padding: '13px', cursor: 'pointer', color: 'var(--texto-2)', fontSize: 13,
-                }}>
-                  <Upload size={15} />
-                  {enviandoLogo ? 'Enviando…' : 'Logo do patrocinador (opcional)'}
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    style={{ display: 'none' }}
-                    onChange={async (e) => {
-                      const f = e.target.files?.[0]
-                      if (!f) return
-                      setEnviandoLogo(true)
-                      try { setLogoUrl(await enviarImagem(f)) } finally { setEnviandoLogo(false) }
-                    }}
-                  />
-                </label>
-              )}
-            </div>
-          )}
-        </div>
+        <SeletorPatrocinador
+          valor={patrocinio}
+          aoMudar={setPatrocinio}
+          rotulo="Este Fofocômetro tem patrocinador"
+          ajuda="A assinatura fica na tela durante a contagem — que é o tempo em que a marca tem a atenção inteira de quem está esperando."
+        />
 
         <div style={{ marginTop: 18 }}>
           <label className="rotulo" style={{ display: 'flex', alignItems: 'center', gap: 7 }}>

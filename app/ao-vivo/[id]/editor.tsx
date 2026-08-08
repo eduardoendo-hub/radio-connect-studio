@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { X, Plus, Trash2, Zap, Clock } from 'lucide-react'
+import { SeletorPatrocinador } from '../../patrocinador'
 
 export type Template = {
   id: string
@@ -20,6 +21,8 @@ export type MomentoParaPublicar = {
   opcoes: { rotulo: string; emoji?: string }[]
   duracaoSegundos: number
   templateId: string
+  /// A campanha que assina este Momento, quando há uma. Relação, não texto.
+  campanhaPatrocinadoraId?: string
 }
 
 /**
@@ -52,6 +55,7 @@ export function EditorMomento({
     template.opcoesPadrao.map((o) => ({ rotulo: o.rotulo, emoji: o.emoji ?? '' })),
   )
   const [duracao, setDuracao] = useState(template.duracaoSegundos)
+  const [patrocinio, setPatrocinio] = useState<string | null>(null)
 
   const primeiroCampo = useRef<HTMLInputElement>(null)
 
@@ -85,6 +89,7 @@ export function EditorMomento({
       })),
       duracaoSegundos: duracao,
       templateId: template.id,
+      campanhaPatrocinadoraId: patrocinio ?? undefined,
     })
   }
 
@@ -218,6 +223,8 @@ export function EditorMomento({
             Janelas curtas deixam de fora quem ouve pelo FM, que chega alguns segundos atrasado.
           </div>
         </div>
+
+        <SeletorPatrocinador valor={patrocinio} aoMudar={setPatrocinio} />
 
         <div style={{ display: 'flex', gap: 10, marginTop: 26, alignItems: 'center' }}>
           <button className="btn" onClick={publicar} disabled={!valido || ocupado}
