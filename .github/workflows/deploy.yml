@@ -1,0 +1,36 @@
+name: Deploy para o Coolify
+
+# A cada push na main, dispara o deploy do Studio no Coolify.
+#
+# Existia em core e app desde o começo; aqui não, e o resultado era eu disparar à mão
+# depois de cada push — o que funciona até a vez em que esquecer. Studio publicado numa
+# versão e API em outra é o tipo de divergência que só aparece na demonstração.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # `next build` já roda o TypeScript. Se o build quebra, o deploy não sai — que é
+      # exatamente o ponto de verificar antes.
+      - name: Build
+        run: npm run build
+
+  deploy:
+    needs: verificar
+    runs-on: ubuntu-latest
+    steps:
+      - name: Disparar deploy no Coolify
+        run: |
+          curl -fsS -X GET \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}" \
+            "${{ secrets.COOLIFY_DEPLOY_URL }}"
