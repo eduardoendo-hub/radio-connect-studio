@@ -1,0 +1,507 @@
+/*
+ * Design System TechNow.
+ *
+ * O Studio é co-branded: identidade da TechNow, com a marca da rádio ao lado. Cores
+ * amostradas dos pixels do deck da proposta, não estimadas de olho.
+ *
+ * O app do ouvinte usa outra paleta — a da emissora. São públicos opostos.
+ */
+
+:root {
+  --fundo: #080f0f;
+  --superficie: #0f2020;
+  --superficie-alta: #16302e;
+  --borda: #1e3634;
+  --borda-forte: #2a4a47;
+
+  --accent: #81d8d0;
+  --accent-forte: #5bc4ba;
+  --rosa: #e8437b;
+
+  /* Reservado: significa "acontecendo agora" e mais nada. Nunca para erro ou exclusão. */
+  --ao-vivo: #e0342a;
+
+  --texto: #f1f5f4;
+  --texto-2: #8fa3a1;
+  --texto-3: #5c6f6d;
+
+  --raio: 10px;
+  --sombra: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --vidro: rgba(15, 32, 32, .72);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--fundo);
+  color: var(--texto);
+  font-family: var(--fonte-corpo), -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100%;
+}
+
+/* Uma família só, como o Spotify faz: os pesos é que fazem a hierarquia. */
+h1, h2, h3, .display {
+  font-family: var(--fonte-corpo), sans-serif;
+  letter-spacing: -.025em;
+  font-weight: 800;
+}
+
+/* O wordmark segue o design system da marca: Inter, e só ele. */
+.marca-wordmark { font-family: var(--fonte-marca), sans-serif; }
+
+/* Números que não dançam: contagem regressiva, votos, horários. */
+.numerico { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum'; }
+
+/* O filete de assinatura: teal → rosa. Sempre fino, nunca como fundo. */
+.assinatura {
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--rosa) 100%);
+}
+
+button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, select, textarea { font: inherit; }
+a { color: inherit; text-decoration: none; }
+
+.container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+/*
+ * Profundidade.
+ *
+ * Num tema escuro a luz vem de cima: por isso o topo do cartão tem um fio claro
+ * (`inset 0 1px 0`) e a base afunda numa sombra. O gradiente vertical na superfície
+ * faz o resto — o mesmo truque de qualquer objeto físico bem iluminado.
+ *
+ * Sem bisel, sem borda dupla, sem sombra colorida: profundidade sugerida, não desenhada.
+ */
+.cartao {
+  background:
+    linear-gradient(180deg, rgba(129, 216, 208, .045) 0%, rgba(129, 216, 208, 0) 42%),
+    linear-gradient(180deg, rgba(24, 46, 45, .86) 0%, rgba(11, 24, 24, .92) 100%);
+  backdrop-filter: blur(16px) saturate(125%);
+  -webkit-backdrop-filter: blur(16px) saturate(125%);
+  border: 1px solid var(--borda);
+  border-top-color: rgba(129, 216, 208, .14);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .055),
+    0 1px 2px rgba(0, 0, 0, .5),
+    0 12px 28px -14px rgba(0, 0, 0, .85);
+}
+
+/* Linha de programação: mesma física, relevo mais discreto. */
+.linha {
+  background:
+    linear-gradient(180deg, rgba(129, 216, 208, .03) 0%, rgba(129, 216, 208, 0) 55%),
+    linear-gradient(180deg, rgba(22, 42, 41, .72) 0%, rgba(11, 23, 23, .8) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--borda);
+  border-top-color: rgba(129, 216, 208, .1);
+  border-radius: 13px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .04),
+    0 1px 1px rgba(0, 0, 0, .4),
+    0 8px 18px -12px rgba(0, 0, 0, .8);
+  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+}
+/* Ao passar o mouse o objeto sobe um pouco e a sombra acompanha. */
+.linha:hover {
+  transform: translateY(-1px);
+  border-color: var(--borda-forte);
+  border-top-color: rgba(129, 216, 208, .2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .07),
+    0 2px 3px rgba(0, 0, 0, .45),
+    0 16px 30px -14px rgba(0, 0, 0, .9);
+}
+.linha:active { transform: translateY(0); }
+
+.btn {
+  font-family: var(--fonte-corpo), sans-serif;
+  letter-spacing: -.01em;
+  background: var(--accent);
+  color: #06201d;
+  border-radius: var(--raio);
+  padding: 11px 18px;
+  font-weight: 500;
+  transition: background .15s ease;
+}
+.btn {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .35),
+    0 2px 8px -2px rgba(129, 216, 208, .3);
+}
+.btn:hover { background: var(--accent-forte); box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 4px 14px -3px rgba(129,216,208,.42); }
+.btn:disabled { opacity: .5; cursor: default; }
+
+.btn-vazio {
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--raio);
+  padding: 10px 16px;
+  color: var(--texto);
+}
+.btn-vazio:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Campos afundam, em vez de subir: o inverso do cartão. */
+.campo {
+  width: 100%;
+  background: rgba(6, 14, 14, .8);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, .45);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 12px 14px;
+  color: var(--texto);
+  outline: none;
+}
+.campo:focus { border-color: var(--accent); }
+.campo::placeholder { color: var(--texto-3); }
+
+.rotulo {
+  display: block;
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--texto-2);
+  margin-bottom: 8px;
+}
+
+/* O pulso: comunica vida sem pedir atenção. Discreto, contínuo, elegante. */
+.pulso {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--ao-vivo);
+  box-shadow: 0 0 0 0 rgba(227, 39, 30, .7);
+  animation: pulsar 2s infinite;
+  flex: none;
+}
+@keyframes pulsar {
+  0%   { box-shadow: 0 0 0 0 rgba(227, 39, 30, .6); }
+  70%  { box-shadow: 0 0 0 10px rgba(227, 39, 30, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(227, 39, 30, 0); }
+}
+
+.etiqueta-ao-vivo {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(227, 39, 30, .12);
+  border: 1px solid rgba(227, 39, 30, .35);
+  color: #ff8a84;
+  border-radius: 999px;
+  padding: 4px 11px 4px 9px;
+  font-size: 11px;
+  letter-spacing: .1em;
+  font-weight: 500;
+}
+
+.erro {
+  background: rgba(227, 39, 30, .1);
+  border: 1px solid rgba(227, 39, 30, .3);
+  color: #ff9a95;
+  border-radius: var(--raio);
+  padding: 11px 14px;
+  font-size: 14px;
+}
+
+
+/*
+ * O pulso da marca.
+ *
+ * O ritmo é ESTADO, não decoração — 4s fora do ar, 2,4s no ar, 1,1s com Momento ativo.
+ * Quem opera o Studio aprende a ler o batimento sem olhar o texto.
+ */
+.marca-anima .marca-ponto {
+  transform-origin: 20px 32px;
+  animation: marcaPonto var(--ritmo, 2.4s) ease-in-out infinite;
+}
+.marca-anima .marca-w1 { animation: marcaOnda var(--ritmo, 2.4s) ease-in-out infinite; animation-delay: .1s; }
+.marca-anima .marca-w2 { animation: marcaOnda var(--ritmo, 2.4s) ease-in-out infinite; animation-delay: .24s; }
+
+@keyframes marcaPonto {
+  0%, 62%, 100% { transform: scale(1); opacity: 1; }
+  18% { transform: scale(1.16); }
+  40% { transform: scale(.94); opacity: .82; }
+}
+@keyframes marcaOnda {
+  0%, 70%, 100% { opacity: .45; }
+  22% { opacity: 1; }
+}
+
+/* Quem pediu menos movimento, recebe menos movimento. */
+@media (prefers-reduced-motion: reduce) {
+  .marca-anima .marca-ponto,
+  .marca-anima .marca-w1,
+  .marca-anima .marca-w2 { animation: none; }
+}
+
+
+/*
+ * A casca: menu à esquerda, conteúdo à direita.
+ *
+ * O menu não rola com a página — o produtor precisa alcançar o Chat no meio de uma
+ * lista longa de Momentos sem procurar. Quem rola é só o conteúdo.
+ */
+.casca { display: flex; min-height: 100vh; }
+
+.casca-menu {
+  width: 236px;
+  flex: none;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--borda);
+  background: linear-gradient(180deg, rgba(14, 30, 30, .82) 0%, rgba(8, 16, 16, .9) 100%);
+  backdrop-filter: blur(18px) saturate(120%);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+}
+
+.casca-conteudo { flex: 1; min-width: 0; }
+
+.casca-marca {
+  display: flex; align-items: center; gap: 10px;
+  padding: 18px 16px 12px;
+}
+.casca-fechar { display: none; margin-left: auto; color: var(--texto-2); }
+
+.casca-studio { display: flex; align-items: center; gap: 9px; min-width: 0; }
+
+/* A emissora entra como legenda do Studio, não como segunda marca: rótulo minúsculo
+   e o logo em tamanho de assinatura. Diz de quem é a operação sem disputar o topo. */
+/* O logo caiu para metade da altura, então o respiro em volta acompanha: mantido o
+   espaçamento antigo, a legenda ficaria boiando num bloco grande demais para ela. */
+.casca-emissora {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+  padding: 3px 16px 16px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--borda);
+}
+.casca-emissora-rotulo {
+  font-size: 8.5px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--texto-3); font-weight: 500;
+}
+.casca-emissora img { opacity: .95; }
+
+.casca-nav { flex: 1; overflow-y: auto; padding: 10px 10px 16px; }
+.casca-grupo + .casca-grupo { margin-top: 18px; }
+.casca-grupo-titulo {
+  font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--texto-3); font-weight: 500;
+  padding: 0 10px 8px;
+}
+
+.casca-item {
+  display: flex; align-items: center; gap: 11px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  color: var(--texto-2);
+  font-size: 14px;
+  transition: background .14s ease, color .14s ease;
+  position: relative;
+}
+.casca-item svg { flex: none; }
+.casca-item-rotulo { flex: 1; min-width: 0; }
+.casca-item:hover { background: rgba(129, 216, 208, .07); color: var(--texto); }
+
+/* O item ativo ganha um filete à esquerda, não um bloco pintado: marca a posição
+   sem virar o elemento mais forte da tela. */
+.casca-item.ativo {
+  background: rgba(129, 216, 208, .1);
+  color: var(--texto);
+  font-weight: 500;
+}
+.casca-item.ativo::before {
+  content: '';
+  position: absolute; left: -10px; top: 8px; bottom: 8px;
+  width: 3px; border-radius: 0 3px 3px 0;
+  background: var(--accent);
+}
+.casca-item.ativo svg { color: var(--accent); }
+
+.casca-item.em-breve { color: var(--texto-3); cursor: default; }
+.casca-item.em-breve:hover { background: none; color: var(--texto-3); }
+.casca-embreve {
+  font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--texto-3); border: 1px solid var(--borda);
+  border-radius: 999px; padding: 2px 6px; flex: none;
+}
+
+.casca-badge {
+  background: var(--rosa); color: #fff;
+  font-size: 11px; font-weight: 600;
+  min-width: 19px; height: 19px; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 5px; flex: none;
+}
+
+.casca-rodape {
+  padding: 14px 16px 18px;
+  border-top: 1px solid var(--borda);
+  display: flex; flex-direction: column; gap: 14px;
+}
+.casca-operador { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.casca-avatar {
+  width: 30px; height: 30px; border-radius: 999px; flex: none;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--rosa) 140%);
+  color: #06201d; font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.casca-operador-nome {
+  display: block; font-size: 13px; color: var(--texto);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.casca-operador-papel {
+  display: block; font-size: 11px; color: var(--texto-3); text-transform: capitalize;
+}
+.casca-sair { margin-left: auto; color: var(--texto-3); flex: none; }
+.casca-sair:hover { color: var(--ao-vivo); }
+
+.casca-topo-movel { display: none; }
+.casca-veu { display: none; }
+
+/* No celular o menu vira gaveta. O produtor usa o Studio no desktop, mas o dono da
+   rádio abre no telefone — e ele não pode encontrar uma tela quebrada. */
+@media (max-width: 900px) {
+  .casca { display: block; }
+  .casca-topo-movel {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--borda);
+    position: sticky; top: 0; z-index: 30;
+    background: rgba(8, 16, 16, .92);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .casca-menu-btn { color: var(--texto-2); display: flex; }
+  .casca-menu {
+    position: fixed; top: 0; left: 0; z-index: 50;
+    transform: translateX(-100%);
+    transition: transform .22s ease;
+    box-shadow: 0 0 40px rgba(0, 0, 0, .6);
+  }
+  .casca-menu.aberto { transform: translateX(0); }
+  .casca-fechar { display: flex; }
+  .casca-veu {
+    display: block; position: fixed; inset: 0; z-index: 40;
+    background: rgba(0, 0, 0, .55);
+  }
+}
+
+
+/*
+ * Chat da produção: fila à esquerda, conversa à direita.
+ *
+ * A altura é fixa e quem rola são as duas colunas, cada uma por conta própria. Se a
+ * página inteira rolasse, o campo de resposta sumiria justamente quando o produtor
+ * termina de ler a mensagem — que é o instante em que ele precisa dele.
+ */
+.chat-grade {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 16px;
+  padding-bottom: 22px;
+}
+
+.chat-fila {
+  overflow-y: auto;
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+  background: rgba(11, 23, 23, .55);
+  padding: 6px;
+}
+
+.chat-fila-item {
+  width: 100%;
+  display: flex; align-items: flex-start; gap: 11px;
+  padding: 10px 11px;
+  border-radius: 10px;
+  transition: background .14s ease;
+  text-align: left;
+}
+.chat-fila-item:hover { background: rgba(129, 216, 208, .06); }
+.chat-fila-item.ativa { background: rgba(129, 216, 208, .11); }
+
+.chat-avatar {
+  width: 32px; height: 32px; border-radius: 999px; flex: none;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--rosa) 150%);
+  color: #06201d; font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Um ponto, não um número: na fila importa quem espera, não quantas mensagens mandou. */
+.chat-ponto {
+  width: 7px; height: 7px; border-radius: 999px;
+  background: var(--rosa); flex: none; margin-top: 12px;
+}
+
+.chat-conversa {
+  display: flex; flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+  background: rgba(11, 23, 23, .55);
+  overflow: hidden;
+}
+
+.chat-cabecalho {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--borda);
+  flex: none;
+}
+
+.chat-corpo {
+  flex: 1; overflow-y: auto;
+  padding: 18px;
+  display: flex; flex-direction: column; gap: 8px;
+  /* A mesma textura de pontos do app do ouvinte: os dois lados da conversa moram no
+     mesmo lugar visual, mesmo em produtos com paletas opostas. */
+  background-image: radial-gradient(rgba(255, 255, 255, .03) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.chat-linha { display: flex; flex-direction: column; align-items: flex-start; }
+.chat-linha.minha { align-items: flex-end; }
+/* O marco de programa é da conversa, não de um dos lados: fica sempre centrado. */
+.chat-linha .chat-marco { align-self: center; }
+
+/* O ouvinte fala em cinza neutro; a rádio responde no teal da casa. As duas cores
+   precisam ser distinguíveis de relance numa conversa longa — se ficarem parecidas,
+   o produtor perde tempo lendo para descobrir quem falou o quê. */
+.chat-balao {
+  max-width: 74%;
+  background: #202b2b;
+  border: 1px solid rgba(255, 255, 255, .06);
+  border-radius: 14px 14px 14px 4px;
+  padding: 10px 13px 7px;
+}
+.chat-balao.minha {
+  background: rgba(129, 216, 208, .17);
+  border: 1px solid rgba(129, 216, 208, .32);
+  border-radius: 14px 14px 4px 14px;
+}
+.chat-hora { font-size: 10.5px; color: var(--texto-3); text-align: right; margin-top: 3px; }
+
+/* "durante o Bom Dia Band" — o que diferencia isto de um mensageiro qualquer. */
+.chat-marco {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: 11px; color: var(--texto-3);
+  margin: 14px 0 10px;
+  text-transform: lowercase;
+}
+
+.chat-barra {
+  display: flex; gap: 10px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--borda);
+  flex: none;
+}
+
+@media (max-width: 900px) {
+  .chat-grade { grid-template-columns: 1fr; }
+  .chat-fila { max-height: 220px; }
+}
