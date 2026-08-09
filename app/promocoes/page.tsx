@@ -137,6 +137,7 @@ export default function PaginaPromocoes() {
 
       {criando && (
         <EditorPromocao
+          jaNoAr={promocoes.find((p) => p.estado === 'no_ar') ?? null}
           aoFechar={() => setCriando(false)}
           aoCriar={async () => { setCriando(false); await carregar() }}
         />
@@ -151,7 +152,16 @@ const REGRAS_PADRAO =
   + 'O sorteio acontece ao vivo e o nome do contemplado é anunciado pelo locutor. '
   + 'O prêmio é pessoal e intransferível.'
 
-function EditorPromocao({ aoFechar, aoCriar }: { aoFechar: () => void; aoCriar: () => void }) {
+function EditorPromocao({
+  jaNoAr,
+  aoFechar,
+  aoCriar,
+}: {
+  /// A que já está no ar, se houver. Ver o aviso lá embaixo.
+  jaNoAr: Promocao | null
+  aoFechar: () => void
+  aoCriar: () => void
+}) {
   const [titulo, setTitulo] = useState('')
   const [descricao, setDescricao] = useState('')
   // Regulamento já vem preenchido de propósito. Em branco, a pressa do ao vivo faz a
@@ -270,6 +280,25 @@ function EditorPromocao({ aoFechar, aoCriar }: { aoFechar: () => void; aoCriar: 
           rotulo="Esta promoção tem patrocinador"
           ajuda="A assinatura aparece no bloco da promoção enquanto ela estiver no ar."
         />
+
+        {/* O aplicativo mostra UMA promoção, a mais recente.
+            
+            Duas no ar não é erro do sistema — a rádio pode ter duas campanhas correndo
+            —, mas a segunda esconde a primeira do bloco principal, e isso precisa ser
+            dito antes e não descoberto depois. Descobri no teste: criei uma segunda e a
+            promoção da demonstração sumiu da tela sem nenhum aviso. */}
+        {jaNoAr && (
+          <div style={{
+            marginTop: 18, padding: '12px 14px', borderRadius: 10,
+            border: '1px solid rgba(246,130,31,.35)', background: 'rgba(246,130,31,.10)',
+            fontSize: 12.5, lineHeight: 1.5, color: 'var(--texto-2)',
+          }}>
+            <strong style={{ color: 'var(--texto-1)' }}>{jaNoAr.titulo}</strong> está no ar
+            agora. O aplicativo mostra uma promoção por vez, a mais recente — se você
+            publicar esta, aquela sai do bloco principal e continua aceitando inscrições
+            por dentro.
+          </div>
+        )}
 
         {erro && <p style={{ color: '#FF9A95', fontSize: 13, marginTop: 14 }}>{erro}</p>}
 
