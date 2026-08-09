@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Gift, Plus, Upload, X } from 'lucide-react'
+import { Gift, Plus, Trash2, Upload, X } from 'lucide-react'
 import { CascaStudio, CabecalhoTela } from '../casca'
 import { chamar, enviarImagem } from '../../lib/api'
 import { SeletorPatrocinador } from '../patrocinador'
@@ -159,6 +159,25 @@ export default function PaginaPromocoes() {
                 }}
               >
                 Encerrar
+              </button>
+            )}
+
+            {/* Apagar só aparece onde é seguro: promoção que ninguém tocou. Com
+                inscrito, o botão nem existe — o servidor recusa de qualquer forma, mas
+                oferecer uma ação que vai ser negada é desenhar uma armadilha. */}
+            {p.estado !== 'no_ar' && p.participantes === 0 && (
+              <button
+                className="btn-vazio"
+                title="Apagar"
+                style={{ flexShrink: 0, fontSize: 12.5, padding: '6px 9px', color: 'var(--texto-3)' }}
+                onClick={async (e) => {
+                  e.stopPropagation()
+                  if (!confirm(`Apagar "${p.titulo}"? Ninguém se inscreveu nela.`)) return
+                  await chamar(`/studio/promocoes/${p.id}`, { method: 'DELETE' })
+                  await carregar()
+                }}
+              >
+                <Trash2 size={14} />
               </button>
             )}
           </div>
