@@ -71,10 +71,19 @@ export function SeletorPatrocinador({
             ))}
           </select>
           {/* O logo aparece aqui porque é ele que vai para a tela do ouvinte. Quem
-              publica confere a marca, não o nome de um registro. */}
+              publica confere a marca, não o nome de um registro.
+
+              Sobre placa branca, igual ao app: metade dos logos é escura e com fundo
+              transparente. Sem a placa, o produtor confere um retângulo vazio e publica
+              achando que está certo. */}
           {escolhida?.logoUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={escolhida.logoUrl} alt="" style={{ maxHeight: 26, maxWidth: 120, objectFit: 'contain', opacity: 0.9 }} />
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              background: '#fff', borderRadius: 6, padding: '5px 9px', width: 'fit-content',
+            }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={escolhida.logoUrl} alt="" style={{ maxHeight: 22, maxWidth: 118, objectFit: 'contain' }} />
+            </span>
           )}
         </div>
       )}
