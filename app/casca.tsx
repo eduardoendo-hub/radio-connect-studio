@@ -51,7 +51,7 @@ const GRUPOS: { titulo: string | null; itens: ItemMenu[] }[] = [
     titulo: 'Conteúdo',
     itens: [
       { href: '/momentos', rotulo: 'Momentos', icone: <Zap size={17} />, emBreve: true },
-      { href: '/promocoes', rotulo: 'Promoções', icone: <Gift size={17} />, emBreve: true },
+      { href: '/promocoes', rotulo: 'Promoções', icone: <Gift size={17} /> },
     ],
   },
   {
