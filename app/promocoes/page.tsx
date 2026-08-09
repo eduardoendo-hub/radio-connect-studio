@@ -1,10 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Gift, Plus, Trash2, Upload, X } from 'lucide-react'
+import { Gift, Plus, Trash2, Trophy, Upload, X } from 'lucide-react'
 import { CascaStudio, CabecalhoTela } from '../casca'
 import { chamar, enviarImagem } from '../../lib/api'
 import { SeletorPatrocinador } from '../patrocinador'
+
+type Vencedor = { nome: string; telefone: string | null; inscritoEm: string }
 
 type Promocao = {
   id: string
@@ -17,6 +19,7 @@ type Promocao = {
   campanhaPatrocinadoraId: string | null
   participantes: number
   patrocinador: string | null
+  resultado: string | null
   estado: 'no_ar' | 'agendada' | 'encerrada' | 'sorteada'
 }
 
@@ -40,6 +43,8 @@ export default function PaginaPromocoes() {
   const [promocoes, setPromocoes] = useState<Promocao[]>([])
   const [carregando, setCarregando] = useState(true)
   const [editando, setEditando] = useState<Promocao | 'nova' | null>(null)
+  const [sorteando, setSorteando] = useState<Promocao | null>(null)
+  const [vencedor, setVencedor] = useState<{ promocao: Promocao; quem: Vencedor } | null>(null)
 
   async function carregar() {
     try {
@@ -54,6 +59,10 @@ export default function PaginaPromocoes() {
 
   return (
     <CascaStudio>
+      {/* As outras telas do Studio já faziam isto e esta não: sem o `main`, a lista
+          encostava na barra lateral de um lado e na borda da janela do outro, e num
+          monitor largo cada linha virava uma faixa de dois metros. */}
+      <main style={{ padding: '22px 26px 40px', maxWidth: 1080 }}>
       <CabecalhoTela
         titulo="Promoções"
         apoio="Enquanto está no ar, a promoção ocupa o bloco principal do aplicativo."
@@ -65,10 +74,10 @@ export default function PaginaPromocoes() {
           // não merece o maior elemento da tela.
           <button className="btn-vazio" onClick={() => setEditando('nova')}
             style={{
-              display: 'flex', alignItems: 'center', gap: 7,
-              fontSize: 13.5, padding: '8px 14px',
+              display: 'flex', alignItems: 'center', gap: 6,
+              fontSize: 12.5, padding: '6px 11px', color: 'var(--texto-2)',
             }}>
-            <Plus size={15} /> Nova promoção
+            <Plus size={14} /> Nova promoção
           </button>
         }
       />
@@ -87,15 +96,15 @@ export default function PaginaPromocoes() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gap: 7 }}>
+      <div style={{ display: 'grid', gap: 6 }}>
         {promocoes.map((p) => (
           <div
             key={p.id}
             className="linha"
             onClick={() => setEditando(p)}
             style={{
-              display: 'flex', alignItems: 'center', gap: 13,
-              padding: '10px 14px', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 11,
+              padding: '7px 12px', cursor: 'pointer',
               opacity: p.estado === 'no_ar' ? 1 : .72,
             }}
           >
@@ -104,34 +113,36 @@ export default function PaginaPromocoes() {
             {p.imagemUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={p.imagemUrl} alt="" style={{
-                width: 40, height: 40, objectFit: 'cover',
-                borderRadius: 8, flexShrink: 0, background: '#000',
+                width: 34, height: 34, objectFit: 'cover',
+                borderRadius: 7, flexShrink: 0, background: '#000',
               }} />
             ) : (
               <div style={{
-                width: 40, height: 40, borderRadius: 8, flexShrink: 0,
+                width: 34, height: 34, borderRadius: 7, flexShrink: 0,
                 background: 'rgba(255,255,255,.05)',
                 display: 'grid', placeItems: 'center',
               }}>
-                <Gift size={16} style={{ color: 'var(--texto-3)' }} />
+                <Gift size={14} style={{ color: 'var(--texto-3)' }} />
               </div>
             )}
 
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{
-                fontSize: 14.5, fontWeight: 600, letterSpacing: -.1,
+                fontSize: 13.5, fontWeight: 600, letterSpacing: -.1,
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
               }}>
                 {p.titulo}
               </div>
               <div style={{
-                display: 'flex', alignItems: 'center', gap: 7, marginTop: 2,
-                fontSize: 11.5, color: 'var(--texto-3)',
+                display: 'flex', alignItems: 'center', gap: 6, marginTop: 1,
+                fontSize: 11, color: 'var(--texto-3)',
               }}>
                 <span style={{ color: ROTULO[p.estado].cor, fontWeight: 600 }}>
                   {ROTULO[p.estado].texto}
                 </span>
-                {p.sorteioEm && <span>· sorteio {quando(p.sorteioEm)}</span>}
+                {p.resultado
+                  ? <span>· contemplado: <strong style={{ color: 'var(--texto-2)' }}>{p.resultado}</strong></span>
+                  : p.sorteioEm && <span>· sorteio {quando(p.sorteioEm)}</span>}
                 {p.patrocinador && <span>· {p.patrocinador}</span>}
               </div>
             </div>
@@ -139,21 +150,36 @@ export default function PaginaPromocoes() {
             {/* O número de inscritos é o que o produtor veio ver. É a única coisa desta
                 linha com corpo grande. */}
             <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <div className="numerico" style={{ fontSize: 17, fontWeight: 700, lineHeight: 1 }}>
+              <div className="numerico" style={{ fontSize: 15, fontWeight: 700, lineHeight: 1 }}>
                 {p.participantes}
               </div>
-              <div style={{ fontSize: 10.5, color: 'var(--texto-3)', marginTop: 3 }}>
+              <div style={{ fontSize: 10, color: 'var(--texto-3)', marginTop: 2 }}>
                 {p.participantes === 1 ? 'inscrito' : 'inscritos'}
               </div>
             </div>
 
-            {p.estado === 'no_ar' && (
+            {/* Com gente inscrita, a ação é **sortear** — e sortear encerra.
+                
+                Encerrar sozinho deixava a promoção no limbo: fora do ar, com inscritos
+                esperando um nome que nunca sairia. Encerrar sem sortear continua
+                existindo, mas só onde faz sentido: quando ninguém entrou. */}
+            {p.estado === 'no_ar' && p.participantes > 0 && (
+              <button
+                className="btn"
+                style={{ flexShrink: 0, fontSize: 12, padding: '6px 12px' }}
+                onClick={(e) => { e.stopPropagation(); setSorteando(p) }}
+              >
+                Sortear
+              </button>
+            )}
+
+            {p.estado === 'no_ar' && p.participantes === 0 && (
               <button
                 className="btn-vazio"
-                style={{ flexShrink: 0, fontSize: 12.5, padding: '6px 11px' }}
+                style={{ flexShrink: 0, fontSize: 12, padding: '5px 10px' }}
                 onClick={async (e) => {
                   e.stopPropagation()
-                  if (!confirm(`Encerrar "${p.titulo}"? Ela sai do ar no aplicativo.`)) return
+                  if (!confirm(`Encerrar "${p.titulo}"? Ninguém se inscreveu.`)) return
                   await chamar(`/studio/promocoes/${p.id}/encerrar`, { method: 'POST' })
                   await carregar()
                 }}
@@ -169,7 +195,7 @@ export default function PaginaPromocoes() {
               <button
                 className="btn-vazio"
                 title="Apagar"
-                style={{ flexShrink: 0, fontSize: 12.5, padding: '6px 9px', color: 'var(--texto-3)' }}
+                style={{ flexShrink: 0, fontSize: 12, padding: '5px 8px', color: 'var(--texto-3)' }}
                 onClick={async (e) => {
                   e.stopPropagation()
                   if (!confirm(`Apagar "${p.titulo}"? Ninguém se inscreveu nela.`)) return
@@ -184,6 +210,26 @@ export default function PaginaPromocoes() {
         ))}
       </div>
 
+      {sorteando && (
+        <ConfirmarSorteio
+          promocao={sorteando}
+          aoFechar={() => setSorteando(null)}
+          aoSortear={(quem) => {
+            setVencedor({ promocao: sorteando, quem })
+            setSorteando(null)
+            void carregar()
+          }}
+        />
+      )}
+
+      {vencedor && (
+        <Contemplado
+          promocao={vencedor.promocao}
+          quem={vencedor.quem}
+          aoFechar={() => setVencedor(null)}
+        />
+      )}
+
       {editando && (
         <EditorPromocao
           promocao={editando === 'nova' ? null : editando}
@@ -192,7 +238,141 @@ export default function PaginaPromocoes() {
           aoSalvar={async () => { setEditando(null); await carregar() }}
         />
       )}
+      </main>
     </CascaStudio>
+  )
+}
+
+/**
+ * A confirmação do sorteio.
+ *
+ * Um passo a mais de propósito. Sortear é irreversível — o nome sai e não se sorteia de
+ * novo —, e vai acontecer com o microfone aberto e a mão com pressa. A janela diz em
+ * voz alta o que vai acontecer: quantos concorrem, que as inscrições fecham agora, e
+ * que não dá para repetir.
+ */
+function ConfirmarSorteio({
+  promocao,
+  aoFechar,
+  aoSortear,
+}: {
+  promocao: Promocao
+  aoFechar: () => void
+  aoSortear: (quem: Vencedor) => void
+}) {
+  const [sorteando, setSorteando] = useState(false)
+  const [erro, setErro] = useState('')
+
+  return (
+    <Janela aoFechar={aoFechar} largura={430}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--accent)' }}>
+        <Trophy size={14} />
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>SORTEAR</span>
+      </div>
+      <h2 style={{ fontSize: 18, fontWeight: 700, letterSpacing: -.3, margin: '10px 0 0' }}>
+        {promocao.titulo}
+      </h2>
+      <p style={{ color: 'var(--texto-2)', fontSize: 13.5, lineHeight: 1.55, margin: '10px 0 0' }}>
+        <strong className="numerico">{promocao.participantes}</strong>{' '}
+        {promocao.participantes === 1 ? 'pessoa está concorrendo' : 'pessoas estão concorrendo'}.
+        As inscrições fecham agora e o nome é escolhido na hora — <strong>não dá para
+        sortear de novo</strong>.
+      </p>
+
+      {erro && <p style={{ color: '#FF9A95', fontSize: 12.5, marginTop: 12 }}>{erro}</p>}
+
+      <div style={{ display: 'flex', gap: 9, marginTop: 20 }}>
+        <button className="btn" disabled={sorteando}
+          style={{ fontSize: 14, padding: '10px 16px', opacity: sorteando ? .5 : 1 }}
+          onClick={async () => {
+            setSorteando(true); setErro('')
+            try {
+              const r = await chamar<{ vencedor: Vencedor }>(
+                `/studio/promocoes/${promocao.id}/sortear`, { method: 'POST' })
+              aoSortear(r.vencedor)
+            } catch (e) {
+              setErro(e instanceof Error ? e.message : 'Não deu para sortear agora.')
+              setSorteando(false)
+            }
+          }}>
+          {sorteando ? 'Sorteando…' : 'Sortear agora'}
+        </button>
+        <button className="btn-vazio" onClick={aoFechar} disabled={sorteando}
+          style={{ fontSize: 13.5, padding: '9px 14px' }}>Cancelar</button>
+      </div>
+    </Janela>
+  )
+}
+
+/**
+ * O contemplado, para o locutor ler no ar.
+ *
+ * Nome grande porque vai ser lido em voz alta, telefone logo abaixo porque a produção
+ * liga em seguida. É a única tela do produto que mostra telefone de ouvinte — e por
+ * isso ela é do Studio, e o aplicativo mostra só "Eduardo E.".
+ */
+function Contemplado({
+  promocao,
+  quem,
+  aoFechar,
+}: {
+  promocao: Promocao
+  quem: Vencedor
+  aoFechar: () => void
+}) {
+  return (
+    <Janela aoFechar={aoFechar} largura={430}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--accent)' }}>
+        <Trophy size={14} />
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>CONTEMPLADO</span>
+      </div>
+      <p style={{ color: 'var(--texto-3)', fontSize: 12.5, margin: '9px 0 0' }}>{promocao.titulo}</p>
+
+      <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: -.7, margin: '14px 0 0', lineHeight: 1.1 }}>
+        {quem.nome}
+      </div>
+      {quem.telefone && (
+        <div className="numerico" style={{ fontSize: 17, color: 'var(--texto-2)', marginTop: 7 }}>
+          {quem.telefone}
+        </div>
+      )}
+
+      <p style={{ color: 'var(--texto-3)', fontSize: 12, lineHeight: 1.5, marginTop: 16 }}>
+        O aplicativo já mostra o resultado para quem participou. No ar, o nome inteiro;
+        na tela, só o primeiro nome e a inicial.
+      </p>
+
+      <button className="btn" onClick={aoFechar}
+        style={{ fontSize: 14, padding: '10px 16px', marginTop: 18 }}>Pronto</button>
+    </Janela>
+  )
+}
+
+/** A janela sobreposta, que já era a mesma em três lugares desta tela. */
+function Janela({
+  children,
+  aoFechar,
+  largura = 540,
+}: {
+  children: React.ReactNode
+  aoFechar: () => void
+  largura?: number
+}) {
+  return (
+    <div
+      onClick={aoFechar}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 50,
+        background: 'rgba(4, 10, 10, .72)',
+        backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+      }}
+    >
+      <div onClick={(e) => e.stopPropagation()} className="cartao"
+        style={{ width: '100%', maxWidth: largura, maxHeight: '90vh', overflowY: 'auto', padding: 22 }}>
+        {children}
+      </div>
+    </div>
   )
 }
 
