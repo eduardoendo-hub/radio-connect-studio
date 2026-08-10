@@ -614,8 +614,9 @@ function EditorPromocao({
             fontSize: 12, lineHeight: 1.5, color: 'var(--texto-2)',
           }}>
             <strong style={{ color: 'var(--texto-1)' }}>{jaNoAr.titulo}</strong> está no ar.
-            O aplicativo mostra uma por vez, a mais recente — se você publicar esta,
-            aquela sai do bloco principal e continua aceitando inscrições por dentro.
+            O bloco principal do aplicativo mostra a mais recente — se você publicar
+            esta, ela assume o destaque e aquela passa para a lista <em>Também no ar</em>,
+            logo abaixo. Nenhuma some, e as duas continuam recebendo inscrição.
           </div>
         )}
 
