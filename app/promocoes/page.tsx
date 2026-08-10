@@ -455,6 +455,7 @@ function EditorPromocao({
   const [imagemUrl, setImagemUrl] = useState(promocao?.imagemUrl ?? '')
   const [seloUrl, setSeloUrl] = useState(promocao?.seloUrl ?? '')
   const [enviando, setEnviando] = useState<'arte' | 'selo' | null>(null)
+  const [erroArte, setErroArte] = useState({ arte: '', selo: '' })
   const [patrocinio, setPatrocinio] = useState<string | null>(promocao?.campanhaPatrocinadoraId ?? null)
   const [sorteio, setSorteio] = useState(() =>
     promocao?.sorteioEm ? paraCampo(new Date(promocao.sorteioEm)) : sugestaoDeSorteio())
@@ -463,6 +464,36 @@ function EditorPromocao({
   const [erro, setErro] = useState('')
 
   const valido = titulo.trim().length > 0 && sorteio.length > 0
+
+  /**
+   * Envia a arte e **conta quando dá errado**.
+   *
+   * A primeira versão era `try { ... } finally { ... }`, sem `catch`: a falha subia
+   * como rejeição não tratada, o rótulo voltava para "foto do topo" e a tela não dizia
+   * nada. Foi assim que o envio ficou quebrado por CORS sem ninguém saber — o produtor
+   * escolhia o arquivo, esperava, e nada acontecia.
+   *
+   * Envio de arquivo falha por motivos que a pessoa resolve sozinha se souber quais:
+   * arquivo grande demais, formato que não entra. Engolir isso é o pior erro possível.
+   */
+  async function enviarArte(
+    f: File,
+    qual: 'arte' | 'selo',
+    guardar: (url: string) => void,
+  ) {
+    setEnviando(qual)
+    setErroArte((e) => ({ ...e, [qual]: '' }))
+    try {
+      guardar(await enviarImagem(f))
+    } catch (e) {
+      setErroArte((antes) => ({
+        ...antes,
+        [qual]: e instanceof Error ? e.message : 'Não deu para enviar esta imagem.',
+      }))
+    } finally {
+      setEnviando(null)
+    }
+  }
 
   async function salvar() {
     if (!valido || salvando) return
@@ -538,20 +569,14 @@ function EditorPromocao({
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 11, marginTop: 15 }}>
           <ArteDaPromocao
             rotulo="Arte" ajuda="foto do topo"
-            url={imagemUrl} enviando={enviando === 'arte'}
-            aoEscolher={async (f) => {
-              setEnviando('arte')
-              try { setImagemUrl(await enviarImagem(f)) } finally { setEnviando(null) }
-            }}
+            url={imagemUrl} enviando={enviando === 'arte'} erro={erroArte.arte}
+            aoEscolher={(f) => enviarArte(f, 'arte', setImagemUrl)}
             aoLimpar={() => setImagemUrl('')}
           />
           <ArteDaPromocao
             rotulo="Selo" ajuda="marca do quadro"
-            url={seloUrl} enviando={enviando === 'selo'}
-            aoEscolher={async (f) => {
-              setEnviando('selo')
-              try { setSeloUrl(await enviarImagem(f)) } finally { setEnviando(null) }
-            }}
+            url={seloUrl} enviando={enviando === 'selo'} erro={erroArte.selo}
+            aoEscolher={(f) => enviarArte(f, 'selo', setSeloUrl)}
             aoLimpar={() => setSeloUrl('')}
           />
         </div>
@@ -730,12 +755,14 @@ function Previa({
 }
 
 function ArteDaPromocao({
-  rotulo, ajuda, url, enviando, aoEscolher, aoLimpar,
+  rotulo, ajuda, url, enviando, erro, aoEscolher, aoLimpar,
 }: {
   rotulo: string
   ajuda: string
   url: string
   enviando: boolean
+  /// O que deu errado no último envio. Ver o comentário em `enviarArte`.
+  erro: string
   aoEscolher: (f: File) => void
   aoLimpar: () => void
 }) {
@@ -765,6 +792,9 @@ function ArteDaPromocao({
           <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }}
             onChange={(e) => { const f = e.target.files?.[0]; if (f) aoEscolher(f) }} />
         </label>
+      )}
+      {erro && (
+        <p style={{ color: '#FF9A95', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>{erro}</p>
       )}
     </div>
   )
