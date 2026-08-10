@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Gift, Plus, Trash2, Trophy, Upload, X } from 'lucide-react'
+import { Eye, EyeOff, Gift, Plus, Trash2, Trophy, Upload, X } from 'lucide-react'
 import { CascaStudio, CabecalhoTela } from '../casca'
 import { chamar, enviarImagem } from '../../lib/api'
 import { SeletorPatrocinador } from '../patrocinador'
@@ -20,11 +20,13 @@ type Promocao = {
   participantes: number
   patrocinador: string | null
   resultado: string | null
-  estado: 'no_ar' | 'agendada' | 'encerrada' | 'sorteada'
+  publicada: boolean
+  estado: 'no_ar' | 'preparada' | 'agendada' | 'encerrada' | 'sorteada'
 }
 
 const ROTULO = {
   no_ar: { texto: 'No ar', cor: 'var(--accent)' },
+  preparada: { texto: 'Preparada', cor: 'var(--texto-2)' },
   agendada: { texto: 'Agendada', cor: 'var(--texto-2)' },
   encerrada: { texto: 'Encerrada', cor: 'var(--texto-3)' },
   sorteada: { texto: 'Sorteada', cor: 'var(--texto-3)' },
@@ -157,6 +159,42 @@ export default function PaginaPromocoes() {
                 {p.participantes === 1 ? 'inscrito' : 'inscritos'}
               </div>
             </div>
+
+            {/* Preparada: o botão é pôr no ar. É a ação óbvia de uma promoção que já
+                foi conferida e está esperando. */}
+            {p.estado === 'preparada' && (
+              <button
+                className="btn"
+                style={{ flexShrink: 0, fontSize: 12, padding: '6px 12px' }}
+                onClick={async (e) => {
+                  e.stopPropagation()
+                  await chamar(`/studio/promocoes/${p.id}/publicacao`,
+                    { method: 'POST', body: JSON.stringify({ publicada: true }) })
+                  await carregar()
+                }}
+              >
+                Pôr no ar
+              </button>
+            )}
+
+            {/* Tirar do ar sem encerrar: some da tela do ouvinte, as inscrições ficam
+                de pé. É o que a rádio faz quando acha um erro no texto no meio da
+                tarde. */}
+            {p.estado === 'no_ar' && (
+              <button
+                className="btn-vazio"
+                title="Tirar do ar sem encerrar"
+                style={{ flexShrink: 0, fontSize: 12, padding: '5px 9px', color: 'var(--texto-3)' }}
+                onClick={async (e) => {
+                  e.stopPropagation()
+                  await chamar(`/studio/promocoes/${p.id}/publicacao`,
+                    { method: 'POST', body: JSON.stringify({ publicada: false }) })
+                  await carregar()
+                }}
+              >
+                <EyeOff size={14} />
+              </button>
+            )}
 
             {/* Com gente inscrita, a ação é **sortear** — e sortear encerra.
                 
@@ -420,6 +458,7 @@ function EditorPromocao({
   const [patrocinio, setPatrocinio] = useState<string | null>(promocao?.campanhaPatrocinadoraId ?? null)
   const [sorteio, setSorteio] = useState(() =>
     promocao?.sorteioEm ? paraCampo(new Date(promocao.sorteioEm)) : sugestaoDeSorteio())
+  const [publicar, setPublicar] = useState(promocao ? promocao.publicada : true)
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState('')
 
@@ -442,6 +481,7 @@ function EditorPromocao({
           // que se quer: o produtor marcou 15h pensando nas 15h dele.
           sorteioEm: new Date(sorteio).toISOString(),
           campanhaPatrocinadoraId: patrocinio ?? undefined,
+          publicada: publicar,
         }),
       })
       aoSalvar()
@@ -461,8 +501,13 @@ function EditorPromocao({
         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
       }}
     >
-      <div onClick={(e) => e.stopPropagation()} className="cartao"
-        style={{ width: '100%', maxWidth: 540, maxHeight: '90vh', overflowY: 'auto', padding: 22 }}>
+      <div onClick={(e) => e.stopPropagation()}
+        style={{
+          width: '100%', maxWidth: 900, maxHeight: '90vh',
+          display: 'flex', gap: 18, alignItems: 'flex-start',
+        }}>
+      <div className="cartao"
+        style={{ flex: 1, minWidth: 0, maxHeight: '90vh', overflowY: 'auto', padding: 22 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: 18 }}>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--accent)' }}>
@@ -549,6 +594,21 @@ function EditorPromocao({
           </div>
         )}
 
+        {/* Publicar é decisão separada de criar. Desmarcado, a promoção existe no
+            Studio e não existe para o ouvinte — que é como se prepara com calma. */}
+        <label style={{
+          display: 'flex', alignItems: 'center', gap: 10, marginTop: 16, cursor: 'pointer',
+        }}>
+          <input type="checkbox" checked={publicar}
+            onChange={(e) => setPublicar(e.target.checked)}
+            style={{ width: 17, height: 17, accentColor: 'var(--accent)' }} />
+          {publicar ? <Eye size={15} style={{ color: 'var(--accent)' }} />
+                    : <EyeOff size={15} style={{ color: 'var(--texto-3)' }} />}
+          <span style={{ fontSize: 13.5 }}>
+            {publicar ? 'No ar para os ouvintes' : 'Só aqui no Studio, por enquanto'}
+          </span>
+        </label>
+
         {erro && <p style={{ color: '#FF9A95', fontSize: 12.5, marginTop: 13 }}>{erro}</p>}
 
         <div style={{ display: 'flex', gap: 9, marginTop: 20, alignItems: 'center' }}>
@@ -561,6 +621,109 @@ function EditorPromocao({
             Cancelar
           </button>
         </div>
+      </div>
+
+      <Previa titulo={titulo} descricao={descricao} imagemUrl={imagemUrl} seloUrl={seloUrl}
+        sorteio={sorteio} />
+      </div>
+    </div>
+  )
+}
+
+/**
+ * A prévia: o cartão como o ouvinte vai ver, enquanto o produtor digita.
+ *
+ * Sem ela, "conferir antes de publicar" é conferir um formulário — e formulário não
+ * mostra que o título quebra em três linhas, que a arte tem o rosto do artista
+ * exatamente onde entra o texto, ou que o selo sumiu no fundo. Essas coisas só aparecem
+ * na forma final, e descobri-las no ar é caro.
+ *
+ * É uma cópia do widget do aplicativo, e isso é uma dívida assumida: quando o cartão de
+ * lá mudar, este precisa mudar junto. Vale porque a alternativa — o produtor abrir o
+ * aplicativo num celular ao lado para conferir — é o que ele faz hoje, e é pior.
+ */
+function Previa({
+  titulo, descricao, imagemUrl, seloUrl, sorteio,
+}: {
+  titulo: string
+  descricao: string
+  imagemUrl: string
+  seloUrl: string
+  sorteio: string
+}) {
+  return (
+    <div style={{ width: 320, flexShrink: 0 }}>
+      <div style={{
+        fontSize: 10.5, fontWeight: 700, letterSpacing: 1.1,
+        color: 'var(--texto-3)', marginBottom: 9, textAlign: 'center',
+      }}>
+        COMO O OUVINTE VÊ
+      </div>
+
+      {/* O fundo é o do aplicativo, não o do Studio: a prévia só serve se as cores
+          forem as de lá. */}
+      <div style={{
+        background: '#0A0A0A', borderRadius: 18, padding: 12,
+        border: '1px solid var(--borda)',
+      }}>
+        <div style={{
+          background: '#181818', borderRadius: 16, overflow: 'hidden',
+          boxShadow: '0 10px 24px -10px rgba(0,0,0,.6)',
+        }}>
+          {imagemUrl && (
+            <div style={{ position: 'relative', height: 160 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={imagemUrl} alt="" style={{
+                width: '100%', height: '100%', objectFit: 'cover', display: 'block',
+              }} />
+              <div style={{
+                position: 'absolute', inset: 0,
+                background: 'linear-gradient(180deg, transparent 45%, rgba(24,24,24,.55) 82%, #181818 100%)',
+              }} />
+              <span style={{
+                position: 'absolute', left: 12, top: 11,
+                background: 'rgba(0,0,0,.55)', borderRadius: 999,
+                padding: '4px 8px', fontSize: 8.5, fontWeight: 800,
+                letterSpacing: 1.1, color: '#fff',
+              }}>
+                PROMOÇÃO NO AR
+              </span>
+              {seloUrl && (
+                <span style={{
+                  position: 'absolute', left: 11, bottom: 8,
+                  background: '#000', borderRadius: 7, padding: '3px 6px',
+                  display: 'inline-flex',
+                }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={seloUrl} alt="" style={{ height: 26, objectFit: 'contain' }} />
+                </span>
+              )}
+            </div>
+          )}
+          <div style={{ padding: '12px 14px 15px' }}>
+            <div style={{
+              fontSize: 17, fontWeight: 800, letterSpacing: -.3, lineHeight: 1.18, color: '#fff',
+            }}>
+              {titulo || 'O prêmio aparece aqui'}
+            </div>
+            {descricao && (
+              <div style={{ fontSize: 11.5, color: '#B3B3B3', lineHeight: 1.4, marginTop: 5 }}>
+                {descricao}
+              </div>
+            )}
+            <div style={{
+              marginTop: 12, background: '#F6821F', color: '#000',
+              borderRadius: 999, padding: '10px 0', textAlign: 'center',
+              fontSize: 12.5, fontWeight: 800,
+            }}>
+              Quero participar
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ fontSize: 10.5, color: 'var(--texto-3)', marginTop: 9, textAlign: 'center' }}>
+        {sorteio ? `Sorteio ${quando(new Date(sorteio).toISOString())}` : 'Escolha a hora do sorteio'}
       </div>
     </div>
   )

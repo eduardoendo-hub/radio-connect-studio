@@ -220,6 +220,11 @@ export default function Pagina({ params }: { params: { id: string } }) {
             </div>
           )}
 
+          {/* O que o locutor faz com uma votação no ar não é olhar o número — é chamar
+              alguém pelo nome. "O João, do Jardim Ângela, votou na Ana Castela. Vamos
+              para você, João." Este botão existe para isso. */}
+          <QuemVotou momentoId={ativo.id} />
+
           <button className="btn-vazio" style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 8 }} disabled={ocupado} onClick={() => encerrar(ativo.id)}>
             <CheckCircle2 size={16} /> Encerrar e publicar resultado
           </button>
@@ -418,5 +423,110 @@ export default function Pagina({ params }: { params: { id: string } }) {
       )}
     </main>
     </CascaStudio>
+  )
+}
+
+type Ouvinte = {
+  nome: string
+  telefone: string | null
+  cidade: string | null
+  opcao: string | null
+  mesesDeCasa: number
+  momentos: number
+  promocoes: number
+}
+
+/**
+ * Três ouvintes prontos para ir ao ar.
+ *
+ * **Três, e não uma lista.** Com o microfone aberto ninguém rola tela: o produtor
+ * aperta e recebe gente que ele pode citar agora. Um pode não atender, dois é pouco
+ * para escolher, dez vira leitura.
+ *
+ * **Os mais de casa, e não os mais recentes.** Citar alguém aleatório é sorteio; citar
+ * quem acompanha há oito meses é a rádio dizendo que sabe quem você é. É esse gesto que
+ * a pessoa conta para os amigos, e é ele que este produto existe para permitir.
+ *
+ * Fica fechado por padrão porque telefone de ouvinte não precisa ficar aberto na tela o
+ * dia inteiro — abre quando o locutor vai usar.
+ */
+function QuemVotou({ momentoId }: { momentoId: string }) {
+  const [gente, setGente] = useState<Ouvinte[] | null>(null)
+  const [semNome, setSemNome] = useState(0)
+  const [buscando, setBuscando] = useState(false)
+  const [erro, setErro] = useState('')
+
+  async function puxar() {
+    setBuscando(true); setErro('')
+    try {
+      const r = await chamar<{ destaques: Ouvinte[]; semNome: number }>(
+        `/studio/momentos/${momentoId}/quem`)
+      setGente(r.destaques)
+      setSemNome(r.semNome)
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Não deu para buscar agora.')
+    } finally {
+      setBuscando(false)
+    }
+  }
+
+  if (gente === null) {
+    return (
+      <button className="btn-vazio" onClick={puxar} disabled={buscando}
+        style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5 }}>
+        <Users size={15} /> {buscando ? 'Buscando…' : 'Quem votou'}
+      </button>
+    )
+  }
+
+  return (
+    <div style={{ marginTop: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 10 }}>
+        <Users size={14} style={{ color: 'var(--accent)' }} />
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: 'var(--accent)' }}>
+          PARA CHAMAR NO AR
+        </span>
+        <button className="btn-vazio" onClick={puxar} disabled={buscando}
+          style={{ marginLeft: 'auto', fontSize: 12, padding: '4px 9px' }}>
+          {buscando ? '…' : 'Atualizar'}
+        </button>
+      </div>
+
+      {erro && <p style={{ color: '#FF9A95', fontSize: 12.5 }}>{erro}</p>}
+
+      {gente.length === 0 ? (
+        <p style={{ color: 'var(--texto-3)', fontSize: 12.5, lineHeight: 1.5 }}>
+          Ninguém que votou tem nome no cadastro ainda. Quem entra só com o telefone não
+          pode ser citado — o nome vem quando a pessoa participa de uma promoção.
+        </p>
+      ) : (
+        <div style={{ display: 'grid', gap: 7 }}>
+          {gente.map((o, i) => (
+            <div key={i} className="linha" style={{ padding: '9px 12px' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 9, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 14.5, fontWeight: 700, letterSpacing: -.2 }}>{o.nome}</span>
+                {o.cidade && <span style={{ fontSize: 12, color: 'var(--texto-3)' }}>{o.cidade}</span>}
+                <span className="numerico" style={{ fontSize: 13, color: 'var(--texto-2)', marginLeft: 'auto' }}>
+                  {o.telefone}
+                </span>
+              </div>
+              <div style={{ fontSize: 11.5, color: 'var(--texto-3)', marginTop: 3 }}>
+                {o.opcao && <>votou em <strong style={{ color: 'var(--texto-2)' }}>{o.opcao}</strong> · </>}
+                {o.mesesDeCasa >= 1
+                  ? `${o.mesesDeCasa} ${o.mesesDeCasa === 1 ? 'mês' : 'meses'} de casa`
+                  : 'chegou este mês'}
+                {o.momentos > 1 && ` · ${o.momentos} Momentos`}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {semNome > 0 && (
+        <p style={{ fontSize: 11, color: 'var(--texto-3)', marginTop: 9 }}>
+          Mais {semNome} {semNome === 1 ? 'pessoa votou' : 'pessoas votaram'} sem nome no cadastro.
+        </p>
+      )}
+    </div>
   )
 }
