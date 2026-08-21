@@ -7,6 +7,7 @@ import { chamar } from '../../lib/api'
 
 type Degrau = {
   rotulo: string
+  frase?: string | null
   diasNaSemana?: number | null
   diasNoMes?: number | null
   minutosNaSemana?: number | null
@@ -114,6 +115,36 @@ export default function Audiencia() {
                     )}
                   </div>
 
+                  {/*
+                    A frase vem logo abaixo do nome porque é assim que o ouvinte a lê: o
+                    nome, e embaixo o que ele quer dizer. "Chega junto" é bonito e não
+                    explica nada sozinho — e o Índice depende de a evolução parecer justa,
+                    o que exige que ela seja compreendida.
+                  */}
+                  <div style={{ marginBottom: i === 0 ? 0 : 12, marginLeft: 33 }}>
+                    <input className="campo" value={d.frase ?? ''} maxLength={90}
+                      placeholder="O que este degrau quer dizer, na voz da rádio"
+                      onChange={(e) => {
+                        setErro(''); setSalvo(false)
+                        const n = [...regua]; n[i] = { ...n[i]!, frase: e.target.value }; setRegua(n)
+                      }} />
+                    <div style={{
+                      display: 'flex', justifyContent: 'space-between', gap: 12, marginTop: 5,
+                    }}>
+                      <span style={{ fontSize: 10.5, color: 'var(--texto-3)', lineHeight: 1.45 }}>
+                        Aparece no aplicativo, embaixo do nome. Fale com a pessoa, não sobre
+                        ela — e evite palavra que muda com o gênero: metade do público é
+                        mulher.
+                      </span>
+                      <span className="numerico" style={{
+                        fontSize: 10.5, whiteSpace: 'nowrap',
+                        color: (d.frase?.length ?? 0) > 62 ? '#E8A33D' : 'var(--texto-3)',
+                      }}>
+                        {d.frase?.length ?? 0}/62
+                      </span>
+                    </div>
+                  </div>
+
                   {i > 0 && (
                     <div style={{
                       display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10,
@@ -157,6 +188,7 @@ export default function Audiencia() {
                       body: JSON.stringify({
                         regua: regua.map((d) => ({
                           rotulo: d.rotulo.trim(),
+                          frase: d.frase?.trim() || null,
                           ...Object.fromEntries(
                             CAMPOS.map((c) => [c.chave, (d as Record<string, unknown>)[c.chave] || null]),
                           ),
