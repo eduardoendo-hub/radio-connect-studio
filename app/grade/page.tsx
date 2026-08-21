@@ -128,6 +128,38 @@ export default function Grade() {
   )
 }
 
+const minutos = (h: string) => Number(h.slice(0, 2)) * 60 + Number(h.slice(3, 5))
+const relogio = (m: number) =>
+  `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
+
+
+/**
+ * O que existe no dia, com os buracos entre uma faixa e outra.
+ *
+ * **O buraco é a informação.** Quem abre esta tela quase sempre está procurando onde
+ * cabe o programa novo, e uma lista de faixas coladas esconde exatamente isso: a grade
+ * da Band não tem nada das 20h às 21h e ninguém percebia. É lá que o aplicativo mostra
+ * "a programação continua" em vez de um programa.
+ *
+ * Menos de 15 minutos não conta. A grade termina às 23:59 e recomeça à 01:00 — marcar o
+ * minuto que sobra antes da meia-noite encheria as sete colunas de ruído para esconder
+ * a hora inteira que importa de verdade.
+ */
+function comBuracos(doDia: Slot[]) {
+  const linhas: ({ tipo: 'faixa'; slot: Slot } | { tipo: 'livre'; de: string; ate: string })[] = []
+  let cursor = 0
+  for (const slot of doDia) {
+    const comeca = minutos(slot.horaInicio)
+    if (comeca - cursor >= 15) {
+      linhas.push({ tipo: 'livre', de: relogio(cursor), ate: slot.horaInicio })
+    }
+    linhas.push({ tipo: 'faixa', slot })
+    cursor = Math.max(cursor, minutos(slot.horaFim))
+  }
+  if (24 * 60 - cursor >= 15) linhas.push({ tipo: 'livre', de: relogio(cursor), ate: '24:00' })
+  return linhas
+}
+
 function Semana({ slots, aoRemover }: { slots: Slot[]; aoRemover: (id: string) => void }) {
   const hoje = new Date().getDay()
   return (
@@ -144,37 +176,42 @@ function Semana({ slots, aoRemover }: { slots: Slot[]; aoRemover: (id: string) =
               {CURTO[dia].toUpperCase()}
             </div>
             <div style={{ display: 'grid', gap: 5 }}>
-              {doDia.length === 0 && (
-                <div style={{
-                  fontSize: 11, color: 'var(--texto-3)', padding: '10px 8px',
-                  border: '1px dashed var(--borda)', borderRadius: 9, textAlign: 'center',
-                }}>
-                  sem programa
-                </div>
-              )}
-              {doDia.map((s) => (
-                <div key={s.id} className="linha"
-                  style={{ padding: '8px 9px', borderLeft: `3px solid ${s.programa.corDestaque ?? 'var(--borda-forte)'}` }}>
-                  <div className="numerico" style={{ fontSize: 10.5, color: 'var(--texto-3)' }}>
-                    {s.horaInicio}–{s.horaFim}
+              {comBuracos(doDia).map((linha, i) =>
+                linha.tipo === 'livre' ? (
+                  <div key={`livre-${i}`} title="Nada na grade neste horário"
+                    style={{
+                      fontSize: 10, color: 'var(--texto-3)', padding: '7px 8px',
+                      border: '1px dashed var(--borda)', borderRadius: 8, textAlign: 'center',
+                      lineHeight: 1.35,
+                    }}>
+                    <span className="numerico">{linha.de}–{linha.ate}</span>
+                    <br />livre
                   </div>
-                  <div style={{
-                    fontSize: 12, fontWeight: 600, marginTop: 2, lineHeight: 1.25,
-                  }}>
-                    {s.programa.nome}
-                  </div>
-                  {s.programa.locutorTitular && (
-                    <div style={{ fontSize: 10, color: 'var(--texto-3)', marginTop: 2 }}>
-                      {s.programa.locutorTitular.nome}
+                ) : (
+                  <div key={linha.slot.id} className="linha"
+                    style={{
+                      padding: '8px 9px',
+                      borderLeft: `3px solid ${linha.slot.programa.corDestaque ?? 'var(--borda-forte)'}`,
+                    }}>
+                    <div className="numerico" style={{ fontSize: 10.5, color: 'var(--texto-3)' }}>
+                      {linha.slot.horaInicio}–{linha.slot.horaFim}
                     </div>
-                  )}
-                  <button className="btn-vazio" title="Tirar da grade"
-                    style={{ marginTop: 6, fontSize: 10.5, padding: '3px 7px', color: 'var(--texto-3)' }}
-                    onClick={() => aoRemover(s.id)}>
-                    <Trash2 size={11} />
-                  </button>
-                </div>
-              ))}
+                    <div style={{ fontSize: 12, fontWeight: 600, marginTop: 2, lineHeight: 1.25 }}>
+                      {linha.slot.programa.nome}
+                    </div>
+                    {linha.slot.programa.locutorTitular && (
+                      <div style={{ fontSize: 10, color: 'var(--texto-3)', marginTop: 2 }}>
+                        {linha.slot.programa.locutorTitular.nome}
+                      </div>
+                    )}
+                    <button className="btn-vazio" title="Tirar da grade"
+                      style={{ marginTop: 6, fontSize: 10.5, padding: '3px 7px', color: 'var(--texto-3)' }}
+                      onClick={() => aoRemover(linha.slot.id)}>
+                      <Trash2 size={11} />
+                    </button>
+                  </div>
+                ),
+              )}
             </div>
           </div>
         )
