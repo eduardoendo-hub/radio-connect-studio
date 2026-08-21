@@ -258,7 +258,8 @@ function NovaFaixa({ programas, aoFechar, aoCriar }: {
   return (
     <Janela titulo="Nova faixa" apoio="O mesmo horário em vários dias, de uma vez." aoFechar={aoFechar}>
       <label className="rotulo">Programa</label>
-      <select className="campo" value={programaId} onChange={(e) => setProgramaId(e.target.value)}>
+      <select className="campo" value={programaId}
+        onChange={(e) => { setErro(''); setProgramaId(e.target.value) }}>
         {programas.length === 0 && <option value="">Cadastre um programa primeiro</option>}
         {programas.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
       </select>
@@ -269,7 +270,10 @@ function NovaFaixa({ programas, aoFechar, aoCriar }: {
           const marcado = dias.includes(i)
           return (
             <button key={i}
-              onClick={() => setDias(marcado ? dias.filter((d) => d !== i) : [...dias, i])}
+              onClick={() => {
+                setErro('')
+                setDias(marcado ? dias.filter((d) => d !== i) : [...dias, i])
+              }}
               style={{
                 padding: '7px 12px', borderRadius: 999, fontSize: 12.5,
                 border: `1px solid ${marcado ? 'var(--accent)' : 'var(--borda-forte)'}`,
@@ -286,12 +290,12 @@ function NovaFaixa({ programas, aoFechar, aoCriar }: {
         <div>
           <label className="rotulo">Começa</label>
           <input className="campo numerico" type="time" value={horaInicio}
-            onChange={(e) => setHoraInicio(e.target.value)} />
+            onChange={(e) => { setErro(''); setHoraInicio(e.target.value) }} />
         </div>
         <div>
           <label className="rotulo">Termina</label>
           <input className="campo numerico" type="time" value={horaFim}
-            onChange={(e) => setHoraFim(e.target.value)} />
+            onChange={(e) => { setErro(''); setHoraFim(e.target.value) }} />
         </div>
       </div>
 
