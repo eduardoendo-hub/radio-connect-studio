@@ -42,7 +42,11 @@ export default function Ajustes() {
   const [novo, setNovo] = useState(false)
   const [editando, setEditando] = useState<Operador | null>(null)
   const [trocandoSenha, setTrocandoSenha] = useState(false)
-  const eu = lerOperador()
+  // Quem sou eu só existe no navegador. Lido durante a renderização, o servidor
+  // desenha "ninguém" e o navegador desenha "Eduardo, Admin" — o React joga fora o HTML
+  // do servidor e repinta a tela inteira. Um `useEffect` custa um quadro e evita isso.
+  const [eu, setEu] = useState<ReturnType<typeof lerOperador>>(null)
+  useEffect(() => setEu(lerOperador()), [])
 
   async function carregar() {
     try {

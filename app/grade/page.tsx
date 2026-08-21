@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Plus, X, Trash2, Mic, Radio } from 'lucide-react'
 import { CascaStudio, CabecalhoTela } from '../casca'
 import { chamar } from '../../lib/api'
+import { equipeDaEdicao } from '../avatar'
 
 type Locutor = { id: string; nome: string; bio: string | null; ativo: boolean }
 type Programa = {
@@ -25,6 +26,7 @@ type Slot = {
 }
 
 const DIAS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
+
 const CURTO = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
 /**
@@ -306,7 +308,7 @@ function Programas({ programas, locutores, aoMudar }: {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 14, fontWeight: 600 }}>{p.nome}</div>
               <div style={{ fontSize: 11.5, color: 'var(--texto-3)', marginTop: 1 }}>
-                {p.equipe.map((e) => e.nome).join(', ') || 'sem equipe'}
+                {equipeDaEdicao(p.locutorTitular, p.equipe).map((e) => e.nome).join(', ') || 'sem equipe'}
                 {!p.anunciosAtivos && ' · sem publicidade'}
               </div>
             </div>
@@ -343,7 +345,13 @@ function EditorPrograma({ programa, locutores, aoFechar, aoSalvar }: {
   const [nome, setNome] = useState(programa?.nome ?? '')
   const [cor, setCor] = useState(programa?.corDestaque ?? '#F6821F')
   const [titular, setTitular] = useState(programa?.locutorTitular?.id ?? '')
-  const [equipe, setEquipe] = useState<string[]>(programa?.equipe.map((e) => e.id) ?? [])
+  // Abre mostrando a realidade e não o recorte: a grade que veio do documento da Band
+  // grava `equipe` como "os outros além do titular", esta tela grava "todo mundo". As
+  // duas telas do Studio e o aplicativo já resolvem isso na mesma função — reusá-la aqui
+  // evita que "A Hora do Ronco" abra sem o Tadeu, que é justamente quem o ouvinte conhece.
+  const [equipe, setEquipe] = useState<string[]>(
+    programa ? equipeDaEdicao(programa.locutorTitular, programa.equipe).map((e) => e.id!) : [],
+  )
   const [anuncios, setAnuncios] = useState(programa?.anunciosAtivos ?? true)
   const [ativo, setAtivo] = useState(programa?.ativo ?? true)
   const [erro, setErro] = useState('')
