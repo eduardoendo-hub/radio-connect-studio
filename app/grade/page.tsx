@@ -414,7 +414,7 @@ function EditorPrograma({ programa, locutores, aoFechar, aoSalvar }: {
       <label className="rotulo" style={{ marginTop: 15 }}>Quem assina</label>
       <select className="campo" value={titular} onChange={(e) => {
         setTitular(e.target.value)
-        // Quem assina está na equipe por definição — ele apresenta. Deixar de fora seria
+        // Quem assina está na equipe por definição — é quem apresenta. Deixar de fora seria
         // pedir que a pessoa marcasse a mesma coisa duas vezes.
         if (e.target.value && !equipe.includes(e.target.value)) setEquipe([...equipe, e.target.value])
       }}>
@@ -621,7 +621,7 @@ function EditorLocutor({ locutor, aoFechar, aoSalvar }: {
       <label className="rotulo" style={{ marginTop: 18 }}>Nome</label>
       <input className="campo" value={nome} autoFocus onChange={(e) => setNome(e.target.value)} />
 
-      <label className="rotulo" style={{ marginTop: 15 }}>Uma linha sobre ele</label>
+      <label className="rotulo" style={{ marginTop: 15 }}>Uma linha de apresentação</label>
       <input className="campo" value={bio} onChange={(e) => setBio(e.target.value)}
         placeholder="A manhã não começa sem ele." />
       <p style={{ fontSize: 11, color: 'var(--texto-3)', marginTop: 6 }}>

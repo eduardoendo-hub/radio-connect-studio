@@ -151,7 +151,7 @@ function NovaRadio({ aoFechar, aoCriar }: { aoFechar: () => void; aoCriar: () =>
           onChange={(e) => { setSlugTocado(true); setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')) }}
           placeholder="bandfm" />
         <p style={{ fontSize: 11, color: 'var(--texto-3)', marginTop: 6, lineHeight: 1.5 }}>
-          <strong style={{ color: 'var(--texto-2)' }}>Não muda depois.</strong> Ele entra na
+          <strong style={{ color: 'var(--texto-2)' }}>Não muda depois.</strong> O apelido entra na
           compilação do aplicativo desta rádio — trocar quebraria os aplicativos já
           instalados no celular das pessoas.
         </p>
@@ -170,7 +170,7 @@ function NovaRadio({ aoFechar, aoCriar }: { aoFechar: () => void; aoCriar: () =>
             ADMINISTRADOR
           </div>
           <p style={{ fontSize: 11.5, color: 'var(--texto-3)', margin: '5px 0 14px' }}>
-            Quem recebe a chave da rádio. Ele cadastra o resto do time pelo Studio.
+            Quem recebe a chave da rádio, e cadastra o resto do time pelo Studio.
           </p>
 
           <label className="rotulo">Nome</label>
