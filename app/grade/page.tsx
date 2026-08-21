@@ -1,12 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Plus, X, Trash2, Mic, Radio } from 'lucide-react'
+import { Plus, X, Trash2, Radio } from 'lucide-react'
 import { CascaStudio, CabecalhoTela } from '../casca'
-import { chamar } from '../../lib/api'
-import { equipeDaEdicao } from '../avatar'
+import { chamar, enviarImagem } from '../../lib/api'
+import { Avatar, equipeDaEdicao } from '../avatar'
 
-type Locutor = { id: string; nome: string; bio: string | null; ativo: boolean }
+type Locutor = { id: string; nome: string; bio: string | null; imagemUrl: string | null; ativo: boolean }
 type Programa = {
   id: string
   nome: string
@@ -515,7 +515,7 @@ function Locutores({ locutores, aoMudar }: { locutores: Locutor[]; aoMudar: () =
               display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
               cursor: 'pointer', opacity: l.ativo ? 1 : .5,
             }}>
-            <Mic size={14} style={{ color: 'var(--texto-3)' }} />
+            <Avatar pessoa={l} tamanho={34} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 14, fontWeight: 600 }}>{l.nome}</div>
               {l.bio && (
@@ -551,13 +551,74 @@ function EditorLocutor({ locutor, aoFechar, aoSalvar }: {
   const editando = locutor !== null
   const [nome, setNome] = useState(locutor?.nome ?? '')
   const [bio, setBio] = useState(locutor?.bio ?? '')
+  const [imagemUrl, setImagemUrl] = useState(locutor?.imagemUrl ?? '')
   const [ativo, setAtivo] = useState(locutor?.ativo ?? true)
+  const [enviando, setEnviando] = useState(false)
+  const [erroFoto, setErroFoto] = useState('')
   const [erro, setErro] = useState('')
   const [salvando, setSalvando] = useState(false)
 
+  /**
+   * Envio de foto tem que falhar em voz alta.
+   *
+   * Arquivo grande demais e formato que não entra são problemas que a pessoa resolve
+   * sozinha — se souber qual é. Já engolimos uma falha dessas: o envio ficou quebrado
+   * por CORS e o produtor escolhia o arquivo, esperava, e nada acontecia.
+   */
+  async function subirFoto(f: File) {
+    setEnviando(true); setErroFoto('')
+    try {
+      setImagemUrl(await enviarImagem(f))
+    } catch (e) {
+      setErroFoto(e instanceof Error ? e.message : 'Não deu para enviar esta foto.')
+    } finally {
+      setEnviando(false)
+    }
+  }
+
   return (
     <Janela titulo={editando ? 'Editar locutor' : 'Novo locutor'} aoFechar={aoFechar}>
-      <label className="rotulo">Nome</label>
+      <label className="rotulo">Foto</label>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <Avatar pessoa={{ nome: nome || '?', imagemUrl: imagemUrl || null }} tamanho={62} />
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+            <label className="btn-vazio"
+              style={{ fontSize: 12.5, padding: '6px 11px', cursor: enviando ? 'wait' : 'pointer' }}>
+              {enviando ? 'Enviando…' : imagemUrl ? 'Trocar' : 'Escolher foto'}
+              <input type="file" accept="image/*" hidden disabled={enviando}
+                onChange={(e) => {
+                  const f = e.target.files?.[0]
+                  // Zera o campo: sem isso, escolher o mesmo arquivo de novo depois de
+                  // um erro não dispara `change` e a tela parece travada.
+                  e.target.value = ''
+                  if (f) void subirFoto(f)
+                }} />
+            </label>
+            {imagemUrl && (
+              <button className="btn-vazio" style={{ fontSize: 12.5, padding: '6px 11px' }}
+                onClick={() => { setImagemUrl(''); setErroFoto('') }}>
+                Tirar
+              </button>
+            )}
+          </div>
+          <p style={{ fontSize: 11, color: 'var(--texto-3)', marginTop: 7, lineHeight: 1.45 }}>
+            Aparece no aplicativo ao lado do nome do programa. Rosto de frente e enquadrado
+            no ombro funciona melhor: o app mostra em círculo pequeno.
+          </p>
+        </div>
+      </div>
+      {erroFoto && (
+        <p style={{ color: '#FF9A95', fontSize: 12, marginTop: 9, lineHeight: 1.5 }}>{erroFoto}</p>
+      )}
+      {!imagemUrl && (
+        <p style={{ fontSize: 11, color: 'var(--texto-3)', marginTop: 9, lineHeight: 1.45 }}>
+          Sem foto, o aplicativo desenha as iniciais numa cor da casa — nunca um cinza:
+          rosto apagado parece conta desativada.
+        </p>
+      )}
+
+      <label className="rotulo" style={{ marginTop: 18 }}>Nome</label>
       <input className="campo" value={nome} autoFocus onChange={(e) => setNome(e.target.value)} />
 
       <label className="rotulo" style={{ marginTop: 15 }}>Uma linha sobre ele</label>
@@ -589,7 +650,10 @@ function EditorLocutor({ locutor, aoFechar, aoSalvar }: {
                   method: editando ? 'PATCH' : 'POST',
                   body: JSON.stringify({
                     nome: nome.trim(),
-                    bio: bio.trim() || undefined,
+                    // `null` e não `undefined` quando está vazio: é a diferença entre
+                    // "não mexi neste campo" e "tire o que está aí".
+                    bio: bio.trim() || (editando ? null : undefined),
+                    imagemUrl: imagemUrl || (editando ? null : undefined),
                     ...(editando ? { ativo } : {}),
                   }),
                 },
