@@ -1,10 +1,43 @@
 'use client'
 
 export const API = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.radioconnect.technowhub.ai/v1'
-export const TENANT = process.env.NEXT_PUBLIC_TENANT ?? 'bandfm'
-
+/**
+ * A emissora vem da **sessão**, não do build.
+ *
+ * `NEXT_PUBLIC_TENANT` era constante de compilação: funcionava com uma rádio e cobrava
+ * caro na segunda — cada emissora exigiria um Studio inteiro, com deploy, domínio e
+ * variáveis próprios, e toda correção viraria três deploys. Agora quem descobre a rádio
+ * é o e-mail de quem entra, e o `slug` que volta do login é o que viaja em `X-Tenant`.
+ *
+ * O valor de reserva existe só para a primeira chamada de quem ainda não entrou.
+ */
 const CHAVE_TOKEN = 'rc.studio.token'
 const CHAVE_OPERADOR = 'rc.studio.operador'
+const CHAVE_EMISSORA = 'rc.studio.emissora'
+
+export type Emissora = { id: string; slug: string; nome: string }
+
+export function guardarEmissora(e: Emissora) {
+  try { localStorage.setItem(CHAVE_EMISSORA, JSON.stringify(e)) } catch { armazenamentoVolatil = true }
+  emissoraNaMemoria = e
+}
+
+export function lerEmissora(): Emissora | null {
+  if (emissoraNaMemoria) return emissoraNaMemoria
+  try {
+    const cru = localStorage.getItem(CHAVE_EMISSORA)
+    return cru ? (JSON.parse(cru) as Emissora) : null
+  } catch {
+    return null
+  }
+}
+
+let emissoraNaMemoria: Emissora | null = null
+
+/** O tenant de agora. Sem sessão, cai no padrão só para a tela de entrada existir. */
+export function tenantAtual(): string {
+  return lerEmissora()?.slug ?? process.env.NEXT_PUBLIC_TENANT ?? 'bandfm'
+}
 
 export type Operador = { id: string; nome: string; email: string; papel: string }
 
@@ -96,7 +129,7 @@ export async function chamar<T>(caminho: string, opcoes: RequestInit = {}): Prom
     ...opcoes,
     headers: {
       'Content-Type': 'application/json',
-      'X-Tenant': TENANT,
+      'X-Tenant': tenantAtual(),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(opcoes.headers ?? {}),
     },
@@ -137,7 +170,7 @@ export async function enviarImagem(arquivo: File): Promise<string> {
     method: 'POST',
     headers: {
       'Content-Type': arquivo.type,
-      'X-Tenant': TENANT,
+      'X-Tenant': tenantAtual(),
       'X-Nome-Arquivo': encodeURIComponent(arquivo.name).slice(0, 120),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },

@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { chamar, guardarSessao, lerToken, armazenamentoVolatil, type Operador } from '../lib/api'
+import { chamar, guardarSessao, guardarEmissora, lerToken, armazenamentoVolatil, type Emissora, type Operador } from '../lib/api'
 import { MarcaPulso, AssinaturaStudio, PoweredByTechNow } from './marca'
 
 export default function Entrar() {
   const router = useRouter()
+  const [emissoras, setEmissoras] = useState<Emissora[]>([])
+  const [emissoraEscolhida, setEmissoraEscolhida] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState('')
@@ -20,10 +22,33 @@ export default function Entrar() {
     setCarregando(true)
     try {
       // O espaço que veio junto na colagem não é problema de quem digitou.
-      const r = await chamar<{ token: string; operador: Operador }>('/studio/entrar', {
+      const r = await chamar<{
+        token: string
+        operador: Operador
+        emissora: Emissora
+        escolhaEmissora?: boolean
+        emissoras?: Emissora[]
+      }>('/studio/entrar', {
         method: 'POST',
-        body: JSON.stringify({ email: email.trim().toLowerCase(), senha: senha.trim() }),
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          senha: senha.trim(),
+          ...(emissoraEscolhida ? { emissoraId: emissoraEscolhida } : {}),
+        }),
       })
+
+      // O mesmo e-mail pode operar mais de uma rádio. O servidor não escolhe por
+      // ninguém — devolve a lista e a tela pergunta. Escolher sozinho seria colocar
+      // alguém para operar o ao vivo da emissora errada.
+      if (r.escolhaEmissora && r.emissoras) {
+        setEmissoras(r.emissoras)
+        setCarregando(false)
+        return
+      }
+
+      // A emissora entra na sessão antes do token: é ela que vira o `X-Tenant` de todas
+      // as chamadas seguintes, e uma chamada sem tenant certo falha em silêncio.
+      guardarEmissora(r.emissora)
       guardarSessao(r.token, r.operador)
 
       // Confere que a sessão realmente ficou guardada ANTES de sair da tela. Sem isso,
@@ -99,6 +124,26 @@ export default function Entrar() {
               required
             />
           </div>
+
+          {/* Só aparece quando o mesmo e-mail opera mais de uma rádio — o que é raro e
+              é exatamente por isso que não pode ser um campo permanente pedindo a
+              emissora a quem só tem uma. */}
+          {emissoras.length > 0 && (
+            <div>
+              <label className="rotulo" htmlFor="emissora">Qual rádio?</label>
+              <select
+                id="emissora"
+                className="campo"
+                value={emissoraEscolhida}
+                onChange={(e) => setEmissoraEscolhida(e.target.value)}
+              >
+                <option value="">Escolha…</option>
+                {emissoras.map((e) => (
+                  <option key={e.id} value={e.id}>{e.nome}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {erro && <div className="erro">{erro}</div>}
           {aviso && (
