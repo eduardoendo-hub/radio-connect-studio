@@ -59,7 +59,7 @@ const GRUPOS: { titulo: string | null; itens: ItemMenu[] }[] = [
     titulo: 'Negócio',
     itens: [
       { href: '/midia', rotulo: 'Mídia', icone: <Megaphone size={17} />, emBreve: true },
-      { href: '/audiencia', rotulo: 'Audiência', icone: <BarChart3 size={17} />, emBreve: true },
+      { href: '/audiencia', rotulo: 'Audiência', icone: <BarChart3 size={17} /> },
     ],
   },
   {
