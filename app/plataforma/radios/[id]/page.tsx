@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { Plus, X, Megaphone, Users } from 'lucide-react'
+import { Plus, X, Megaphone, Users, BarChart3 } from 'lucide-react'
 import { CascaPlataforma } from '../../casca'
 import { chamarPlataforma } from '../../../../lib/plataforma'
 
@@ -63,6 +63,10 @@ export default function Carteira() {
           Banner, pré-roll e patrocínio só são entregues se a campanha existir aqui.
         </p>
         <div style={{ flex: 1 }} />
+        <a href={`/plataforma/radios/${id}/relatorio`} className="btn-vazio"
+          style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, padding: '6px 11px', marginRight: 8 }}>
+          <BarChart3 size={14} /> Entrega
+        </a>
         <button className="btn-vazio" onClick={() => setNovoAnunciante(true)}
           style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, padding: '6px 11px' }}>
           <Plus size={14} /> Novo anunciante
