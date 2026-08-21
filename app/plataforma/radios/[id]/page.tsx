@@ -39,6 +39,7 @@ export default function Carteira() {
   const [carregando, setCarregando] = useState(true)
   const [novoAnunciante, setNovoAnunciante] = useState(false)
   const [novaCampanhaDe, setNovaCampanhaDe] = useState<Anunciante | null>(null)
+  const [editando, setEditando] = useState<{ anunciante: Anunciante; campanha: Campanha } | null>(null)
 
   async function carregar() {
     try {
@@ -96,7 +97,8 @@ export default function Carteira() {
             {a.campanhas.length > 0 && (
               <div style={{ display: 'grid', gap: 6, marginTop: 14 }}>
                 {a.campanhas.map((c) => (
-                  <div key={c.id} className="linha" style={{ padding: '9px 12px' }}>
+                  <div key={c.id} className="linha" style={{ padding: '9px 12px', cursor: 'pointer' }}
+                    onClick={() => setEditando({ anunciante: a, campanha: c })}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13.5, fontWeight: 600 }}>{c.nome}</div>
@@ -166,9 +168,14 @@ export default function Carteira() {
           aoCriar={async () => { setNovoAnunciante(false); await carregar() }} />
       )}
       {novaCampanhaDe && (
-        <NovaCampanha emissoraId={id} anunciante={novaCampanhaDe}
+        <EditorCampanha emissoraId={id} anunciante={novaCampanhaDe}
           aoFechar={() => setNovaCampanhaDe(null)}
-          aoCriar={async () => { setNovaCampanhaDe(null); await carregar() }} />
+          aoSalvar={async () => { setNovaCampanhaDe(null); await carregar() }} />
+      )}
+      {editando && (
+        <EditorCampanha emissoraId={id} anunciante={editando.anunciante} campanha={editando.campanha}
+          aoFechar={() => setEditando(null)}
+          aoSalvar={async () => { setEditando(null); await carregar() }} />
       )}
     </CascaPlataforma>
   )
@@ -239,25 +246,41 @@ function NovoAnunciante({ emissoraId, aoFechar, aoCriar }: {
   )
 }
 
-function NovaCampanha({ emissoraId, anunciante, aoFechar, aoCriar }: {
-  emissoraId: string; anunciante: Anunciante; aoFechar: () => void; aoCriar: () => void
+/**
+ * Cria e edita, no mesmo formulário.
+ *
+ * Contrato se corrige: o período muda, o valor é renegociado, o formato foi cadastrado
+ * errado. Antes só dava para criar de novo — e criar de novo joga fora as impressões já
+ * contadas, que são justamente a base da cobrança.
+ */
+function EditorCampanha({ emissoraId, anunciante, campanha, aoFechar, aoSalvar }: {
+  emissoraId: string
+  anunciante: Anunciante
+  campanha?: Campanha
+  aoFechar: () => void
+  aoSalvar: () => void
 }) {
+  const editando = campanha !== undefined
   const hoje = new Date()
   const daquiAUmMes = new Date(hoje.getTime() + 30 * 864e5)
   const p = (n: number) => n.toString().padStart(2, '0')
   const data = (d: Date) => `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
 
-  const [nome, setNome] = useState('')
-  const [formato, setFormato] = useState('banner')
-  const [inicioEm, setInicioEm] = useState(data(hoje))
-  const [fimEm, setFimEm] = useState(data(daquiAUmMes))
-  const [vendidoPor, setVendidoPor] = useState<'TECHNOW' | 'RADIO'>('TECHNOW')
-  const [valor, setValor] = useState('')
+  const [nome, setNome] = useState(campanha?.nome ?? '')
+  const [formato, setFormato] = useState(campanha?.formato ?? 'banner')
+  const [inicioEm, setInicioEm] = useState(campanha ? data(new Date(campanha.inicioEm)) : data(hoje))
+  const [fimEm, setFimEm] = useState(campanha ? data(new Date(campanha.fimEm)) : data(daquiAUmMes))
+  const [vendidoPor, setVendidoPor] = useState<'TECHNOW' | 'RADIO'>(campanha?.vendidoPor ?? 'TECHNOW')
+  const [valor, setValor] = useState(campanha?.valorTotal ?? '')
+  const [status, setStatus] = useState(campanha?.status ?? 'ATIVA')
   const [erro, setErro] = useState('')
   const [salvando, setSalvando] = useState(false)
 
   return (
-    <Janela titulo="Nova campanha" apoio={anunciante.nome} aoFechar={aoFechar}>
+    <Janela
+      titulo={editando ? 'Editar campanha' : 'Nova campanha'}
+      apoio={editando ? `${anunciante.nome} · ${campanha!.impressoes} impressões já contadas` : anunciante.nome}
+      aoFechar={aoFechar}>
       <label className="rotulo">Nome</label>
       <input className="campo" value={nome} autoFocus onChange={(e) => setNome(e.target.value)}
         placeholder="Soneda · Agosto" />
@@ -292,6 +315,24 @@ function NovaCampanha({ emissoraId, anunciante, aoFechar, aoCriar }: {
       <input className="campo numerico" value={valor} inputMode="decimal"
         onChange={(e) => setValor(e.target.value.replace(/[^0-9.,]/g, ''))} placeholder="5000" />
 
+      {editando && (
+        <>
+          <label className="rotulo" style={{ marginTop: 14 }}>Situação</label>
+          <select className="campo" value={status} onChange={(e) => setStatus(e.target.value)}>
+            <option value="ATIVA">Ativa</option>
+            <option value="RASCUNHO">Rascunho</option>
+            <option value="AGUARDANDO_APROVACAO">Aguardando aprovação</option>
+            <option value="APROVADA">Aprovada</option>
+            <option value="ENCERRADA">Encerrada</option>
+            <option value="REJEITADA">Rejeitada</option>
+          </select>
+          <p style={{ fontSize: 11, color: 'var(--texto-3)', marginTop: 6, lineHeight: 1.5 }}>
+            Só campanha <strong style={{ color: 'var(--texto-2)' }}>ativa e no período</strong> é
+            entregue. Encerrar aqui tira do ar sem apagar o que já foi contado.
+          </p>
+        </>
+      )}
+
       {erro && <p style={{ color: '#FF9A95', fontSize: 12.5, marginTop: 12 }}>{erro}</p>}
 
       <div style={{ display: 'flex', gap: 9, marginTop: 20 }}>
@@ -300,12 +341,17 @@ function NovaCampanha({ emissoraId, anunciante, aoFechar, aoCriar }: {
           onClick={async () => {
             setSalvando(true); setErro('')
             try {
-              await chamarPlataforma(`/emissoras/${emissoraId}/campanhas`, {
-                method: 'POST',
+              await chamarPlataforma(
+                editando
+                  ? `/emissoras/${emissoraId}/campanhas/${campanha!.id}`
+                  : `/emissoras/${emissoraId}/campanhas`,
+                {
+                method: editando ? 'PATCH' : 'POST',
                 body: JSON.stringify({
                   anuncianteId: anunciante.id,
                   nome: nome.trim(),
                   formato,
+                  status,
                   // Data de calendário: o dia inteiro conta, então o fim vai para o
                   // último instante. Campanha que termina "no dia 30" e para de valer à
                   // meia-noite do dia 29 é reclamação garantida do anunciante.
@@ -315,7 +361,7 @@ function NovaCampanha({ emissoraId, anunciante, aoFechar, aoCriar }: {
                   ...(valor ? { valorTotal: Number(valor.replace(',', '.')) } : {}),
                 }),
               })
-              aoCriar()
+              aoSalvar()
             } catch (e) {
               setErro(e instanceof Error ? e.message : 'Não deu para criar.')
               setSalvando(false)
