@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Plus, X, Trash2, Radio } from 'lucide-react'
+import { Plus, X, Trash2, Radio, Megaphone } from 'lucide-react'
 import { CascaStudio, CabecalhoTela } from '../casca'
 import { chamar, enviarImagem } from '../../lib/api'
 import { Avatar, equipeDaEdicao } from '../avatar'
+import { SeletorPatrocinador } from '../patrocinador'
 
 type Locutor = { id: string; nome: string; bio: string | null; imagemUrl: string | null; ativo: boolean }
 type Programa = {
@@ -15,6 +16,8 @@ type Programa = {
   anunciosAtivos: boolean
   locutorTitular: { id: string; nome: string } | null
   equipe: { id: string; nome: string }[]
+  campanhaPatrocinadoraId: string | null
+  patrocinio: { nome: string; campanha: string; vigente: boolean; fimEm: string } | null
   faixas: number
 }
 type Slot = {
@@ -352,6 +355,17 @@ function Programas({ programas, locutores, aoMudar }: {
                 {equipeDaEdicao(p.locutorTitular, p.equipe).map((e) => e.nome).join(', ') || 'sem equipe'}
                 {!p.anunciosAtivos && ' · sem publicidade'}
               </div>
+              {p.patrocinio && (
+                <div style={{
+                  fontSize: 11, marginTop: 4, display: 'flex', alignItems: 'center', gap: 5,
+                  color: p.patrocinio.vigente ? 'var(--accent)' : '#E8A33D',
+                }}>
+                  <Megaphone size={11} />
+                  {p.patrocinio.vigente
+                    ? `Oferecimento ${p.patrocinio.nome}`
+                    : `${p.patrocinio.nome} — contrato vencido, o app já não mostra`}
+                </div>
+              )}
             </div>
             <div style={{ textAlign: 'right' }}>
               <div className="numerico" style={{ fontSize: 14, fontWeight: 700, lineHeight: 1 }}>
@@ -394,6 +408,7 @@ function EditorPrograma({ programa, locutores, aoFechar, aoSalvar }: {
     programa ? equipeDaEdicao(programa.locutorTitular, programa.equipe).map((e) => e.id!) : [],
   )
   const [anuncios, setAnuncios] = useState(programa?.anunciosAtivos ?? true)
+  const [patrocinio, setPatrocinio] = useState<string | null>(programa?.campanhaPatrocinadoraId ?? null)
   const [ativo, setAtivo] = useState(programa?.ativo ?? true)
   const [erro, setErro] = useState('')
   const [salvando, setSalvando] = useState(false)
@@ -445,14 +460,31 @@ function EditorPrograma({ programa, locutores, aoFechar, aoSalvar }: {
         primeiro.
       </p>
 
+      {/*
+        O patrocínio mora aqui, e não na faixa da grade: o contrato é com "A Hora do
+        Ronco", não com a terça das 6h. Escolhido uma vez, assina todas as edições de
+        todos os dias — e continua assinando quando a rádio muda o horário, que é o que
+        acontece toda temporada.
+      */}
+      <SeletorPatrocinador
+        valor={patrocinio}
+        aoMudar={setPatrocinio}
+        rotulo="Este programa tem patrocinador"
+        ajuda="O “um oferecimento” com o logo aparece no cabeçalho do programa, em toda edição, todos os dias em que ele vai ao ar. Momento patrocinado tem precedência: enquanto um estiver no ar, é ele quem assina."
+      />
+
       <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 18, cursor: 'pointer' }}>
         <input type="checkbox" checked={anuncios} onChange={(e) => setAnuncios(e.target.checked)}
           style={{ width: 17, height: 17, accentColor: 'var(--accent)' }} />
         <span style={{ fontSize: 13.5 }}>Aceita publicidade</span>
       </label>
       <p style={{ fontSize: 11, color: 'var(--texto-3)', marginTop: 6, marginLeft: 27, lineHeight: 1.5 }}>
-        Desligue no horário político eleitoral, no religioso, ou num especial vendido com
-        exclusividade. Sem isso, banner e pré-roll entram normalmente.
+        Vale para <strong style={{ color: 'var(--texto-2)' }}>banner e pré-roll</strong> —
+        o inventário vendido por cima do programa. Desligue no horário político eleitoral,
+        no religioso, ou num especial vendido com exclusividade.
+        <br />
+        Não silencia o patrocinador do programa acima: <em>quem compra o programa
+        inteiro</em> continua assinando, e é exatamente isso que exclusividade quer dizer.
       </p>
 
       {editando && (
@@ -476,6 +508,7 @@ function EditorPrograma({ programa, locutores, aoFechar, aoSalvar }: {
               locutorTitularId: titular || null,
               equipeIds: equipe,
               anunciosAtivos: anuncios,
+              campanhaPatrocinadoraId: patrocinio,
               ...(editando ? { ativo } : {}),
             }
             try {
