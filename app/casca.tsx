@@ -63,7 +63,7 @@ const GRUPOS: { titulo: string | null; itens: ItemMenu[] }[] = [
   },
   {
     titulo: null,
-    itens: [{ href: '/ajustes', rotulo: 'Ajustes', icone: <Settings size={17} />, emBreve: true }],
+    itens: [{ href: '/ajustes', rotulo: 'Ajustes', icone: <Settings size={17} /> }],
   },
 ]
 
