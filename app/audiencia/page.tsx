@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Smartphone, Headphones, Info } from 'lucide-react'
+import { Smartphone, Headphones, Info, Mic, Phone, Lock } from 'lucide-react'
 import { CascaStudio, CabecalhoTela } from '../casca'
 import { chamar } from '../../lib/api'
 
@@ -30,6 +30,22 @@ type Faixa = {
   momentos: number
   mensagens: number
   participacoes: number
+}
+
+type Pessoa = {
+  id: string
+  nome: string | null
+  comoChamar: string | null
+  podeSerCitado: boolean
+  telefone: string | null
+  cidade: string | null
+  ouvindo: boolean
+  votouHoje: number
+  minutosHoje: number
+  degrau: string
+  nivel: number
+  ultima: { escolha: string | null; momento: string; quando: string } | null
+  desde: string
 }
 
 type Agora = {
@@ -219,8 +235,156 @@ function VisaoAgora() {
       ) : (
         <Barras faixas={d.faixas} pico={pico} faixaAberta={d.faixaAberta} />
       )}
+
+      <QuemEstaAi />
     </>
   )
+}
+
+/**
+ * As pessoas que estão com a rádio agora, para o locutor citar no ar.
+ *
+ * **É a tela que fecha o círculo do produto.** Quem ouve o próprio nome no rádio não
+ * desinstala o aplicativo, e quem ouve o nome de outra pessoa entende na hora que estar
+ * ali tem consequência. Nenhum banner faz isso.
+ *
+ * Por isso a ordem não é alfabética nem por chegada: primeiro quem **autorizou** ser
+ * citado e tem como ser chamado, depois quem está mais alto na escada. O locutor está
+ * procurando alguém que ele possa citar, saiba chamar e valha a pena mencionar — e a
+ * lista já vem nessa ordem para ele não ter que procurar no meio de um programa ao vivo.
+ */
+function QuemEstaAi() {
+  const [d, setD] = useState<{ pessoas: Pessoa[]; total: number } | null>(null)
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    const puxar = () =>
+      chamar<{ pessoas: Pessoa[]; total: number }>('/studio/audiencia/quem-esta-ai')
+        .then(setD)
+        .catch(() => setD({ pessoas: [], total: 0 }))
+    void puxar()
+    timer.current = setInterval(puxar, 30_000)
+    return () => { if (timer.current) clearInterval(timer.current) }
+  }, [])
+
+  if (!d || d.pessoas.length === 0) return null
+
+  const citaveis = d.pessoas.filter((p) => p.podeSerCitado && p.comoChamar).length
+
+  return (
+    <>
+      <h2 style={{
+        fontSize: 14, fontWeight: 700, margin: '34px 0 4px',
+        display: 'flex', alignItems: 'center', gap: 8,
+      }}>
+        <Mic size={14} style={{ color: 'var(--accent)' }} /> Quem está aí agora
+      </h2>
+      <p style={{ fontSize: 12, color: 'var(--texto-3)', margin: '0 0 16px', maxWidth: 640, lineHeight: 1.6 }}>
+        {citaveis > 0
+          ? `${citaveis} ${citaveis === 1 ? 'pessoa autorizou' : 'pessoas autorizaram'} a rádio a dizer o nome delas no ar. Elas vêm primeiro.`
+          : 'Ninguém aqui autorizou a rádio a dizer o nome no ar ainda — o convite aparece no aplicativo, em Sua Rádio.'}
+      </p>
+
+      <div style={{ display: 'grid', gap: 7 }}>
+        {d.pessoas.map((p) => <Cartao key={p.id} p={p} />)}
+      </div>
+
+      {d.total > d.pessoas.length && (
+        <p style={{ fontSize: 11.5, color: 'var(--texto-3)', marginTop: 12 }}>
+          e mais {d.total - d.pessoas.length} pessoas no aplicativo neste momento.
+        </p>
+      )}
+    </>
+  )
+}
+
+function Cartao({ p }: { p: Pessoa }) {
+  const podeCitar = p.podeSerCitado && p.comoChamar
+  const desde = new Date(p.desde)
+  const meses = Math.floor((Date.now() - desde.getTime()) / (30 * 86_400_000))
+
+  return (
+    <div className="linha" style={{
+      padding: '12px 15px', display: 'flex', gap: 14, alignItems: 'flex-start',
+      opacity: podeCitar ? 1 : .6,
+      borderLeft: `3px solid ${podeCitar ? 'var(--accent)' : 'transparent'}`,
+    }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: -.2 }}>
+            {p.comoChamar ?? 'Sem nome no cadastro'}
+          </span>
+          {p.cidade && (
+            <span style={{ fontSize: 12.5, color: 'var(--texto-3)' }}>de {p.cidade}</span>
+          )}
+          <span style={{
+            fontSize: 10.5, padding: '2px 8px', borderRadius: 999,
+            background: 'rgba(129,216,208,.13)', color: 'var(--accent)', fontWeight: 600,
+          }}>
+            {p.degrau}
+          </span>
+          {p.ouvindo && (
+            <span style={{
+              fontSize: 10.5, display: 'flex', alignItems: 'center', gap: 4,
+              color: AZUL,
+            }}>
+              <Headphones size={11} /> ouvindo por aqui
+            </span>
+          )}
+        </div>
+
+        {/* O assunto pronto. Sem isto o locutor tem um nome e precisa inventar o resto. */}
+        {p.ultima && (
+          <div style={{ fontSize: 12.5, color: 'var(--texto-2)', marginTop: 5, lineHeight: 1.45 }}>
+            {p.ultima.escolha
+              ? <>votou em <strong>{p.ultima.escolha}</strong> · {p.ultima.momento}</>
+              : <>participou de <strong>{p.ultima.momento}</strong></>}
+            <span style={{ color: 'var(--texto-3)' }}> · {haQuanto(p.ultima.quando)}</span>
+          </div>
+        )}
+
+        <div style={{ fontSize: 11, color: 'var(--texto-3)', marginTop: 5 }}>
+          {p.minutosHoje > 0 && `${p.minutosHoje} min pelo app hoje · `}
+          {p.votouHoje > 0 && `${p.votouHoje} ${p.votouHoje === 1 ? 'voto' : 'votos'} hoje · `}
+          {meses >= 1 ? `ouvinte há ${meses} ${meses === 1 ? 'mês' : 'meses'}` : 'chegou este mês'}
+        </div>
+      </div>
+
+      <div style={{ textAlign: 'right', flex: 'none' }}>
+        {podeCitar ? (
+          <>
+            <div className="numerico" style={{
+              fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 6,
+              justifyContent: 'flex-end', color: 'var(--texto-2)',
+            }}>
+              <Phone size={11} style={{ color: 'var(--texto-3)' }} />
+              {p.telefone ?? '—'}
+            </div>
+            <div style={{ fontSize: 10, color: 'var(--accent)', marginTop: 4 }}>
+              pode falar no ar
+            </div>
+          </>
+        ) : (
+          <div style={{
+            fontSize: 10.5, color: 'var(--texto-3)', display: 'flex',
+            alignItems: 'center', gap: 5, justifyContent: 'flex-end',
+          }} title="Dizer um nome na rádio é publicação, e essa pessoa ainda não autorizou.">
+            <Lock size={11} />
+            {p.comoChamar ? 'não autorizou' : 'sem cadastro'}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/** "há 4 min" — o tempo que importa para um locutor é o que passou, não a hora. */
+function haQuanto(iso: string) {
+  const min = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000)
+  if (min < 1) return 'agora mesmo'
+  if (min < 60) return `há ${min} min`
+  const h = Math.floor(min / 60)
+  return `há ${h}h`
 }
 
 /**
