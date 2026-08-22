@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { UserPlus, KeyRound, X, ShieldCheck } from 'lucide-react'
 import { CascaStudio, CabecalhoTela } from '../casca'
+import { ReguaDeConexao } from './regua'
 import { chamar, lerOperador } from '../../lib/api'
 
 type Operador = {
@@ -42,6 +43,7 @@ export default function Ajustes() {
   const [novo, setNovo] = useState(false)
   const [editando, setEditando] = useState<Operador | null>(null)
   const [trocandoSenha, setTrocandoSenha] = useState(false)
+  const [aba, setAba] = useState<'equipe' | 'conexao'>('equipe')
   // Quem sou eu só existe no navegador. Lido durante a renderização, o servidor
   // desenha "ninguém" e o navegador desenha "Eduardo, Admin" — o React joga fora o HTML
   // do servidor e repinta a tela inteira. Um `useEffect` custa um quadro e evita isso.
@@ -72,14 +74,14 @@ export default function Ajustes() {
       <main style={{ padding: '22px 26px 40px', maxWidth: 1080 }}>
         <CabecalhoTela
           titulo="Ajustes"
-          apoio="Quem tem acesso ao Studio desta rádio."
+          apoio="O que se define uma vez e se revisa de vez em quando."
           acoes={
             <div style={{ display: 'flex', gap: 8 }}>
               <button className="btn-vazio" onClick={() => setTrocandoSenha(true)}
                 style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, padding: '6px 11px' }}>
                 <KeyRound size={14} /> Minha senha
               </button>
-              {souAdmin && (
+              {souAdmin && aba === 'equipe' && (
                 <button className="btn-vazio" onClick={() => setNovo(true)}
                   style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, padding: '6px 11px' }}>
                   <UserPlus size={14} /> Novo acesso
@@ -89,8 +91,21 @@ export default function Ajustes() {
           }
         />
 
-        {carregando && <p style={{ color: 'var(--texto-3)', fontSize: 14 }}>Carregando…</p>}
-        {erro && !carregando && (
+        <div style={{ display: 'flex', gap: 6, marginBottom: 22 }}>
+          {([['equipe', 'Equipe'], ['conexao', 'Régua de conexão']] as const).map(([v, r]) => (
+            <button key={v} className={aba === v ? 'btn' : 'btn-vazio'}
+              style={{ fontSize: 12.5, padding: '6px 13px' }} onClick={() => setAba(v)}>
+              {r}
+            </button>
+          ))}
+        </div>
+
+        {aba === 'conexao' && <ReguaDeConexao />}
+
+        {aba === 'equipe' && carregando && (
+          <p style={{ color: 'var(--texto-3)', fontSize: 14 }}>Carregando…</p>
+        )}
+        {aba === 'equipe' && erro && !carregando && (
           <div className="cartao" style={{ padding: 26, textAlign: 'center' }}>
             <ShieldCheck size={22} style={{ color: 'var(--texto-3)' }} />
             <p style={{ marginTop: 10, fontSize: 14.5, fontWeight: 600 }}>
@@ -102,6 +117,7 @@ export default function Ajustes() {
           </div>
         )}
 
+        {aba === 'equipe' && (
         <div style={{ display: 'grid', gap: 6 }}>
           {operadores.map((o) => (
             <div key={o.id} className="linha"
@@ -135,6 +151,7 @@ export default function Ajustes() {
             </div>
           ))}
         </div>
+        )}
 
         {(novo || editando) && (
           <EditorAcesso
